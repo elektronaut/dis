@@ -1,10 +1,11 @@
 require 'spec_helper'
 
 describe BlobDispenser::Layers do
-  let(:connection)    { nil }
-  let(:layer)         { BlobDispenser::Layer.new(connection) }
-  let(:delayed_layer) { BlobDispenser::Layer.new(connection, delayed: true) }
-  let(:layers)        { BlobDispenser::Layers.new }
+  let(:connection)     { nil }
+  let(:layer)          { BlobDispenser::Layer.new(connection) }
+  let(:delayed_layer)  { BlobDispenser::Layer.new(connection, delayed: true) }
+  let(:readonly_layer) { BlobDispenser::Layer.new(connection, readonly: true) }
+  let(:layers)         { BlobDispenser::Layers.new }
 
   describe ".delayed" do
     before do
@@ -67,6 +68,72 @@ describe BlobDispenser::Layers do
     end
 
     context "with immediate layers" do
+      before { layers << layer }
+      it { should be_true }
+    end
+  end
+
+  describe ".readonly" do
+    before do
+      layers << layer
+      layers << readonly_layer
+    end
+
+    it "should only return the readonly layers" do
+      expect(layers.readonly).not_to include(layer)
+      expect(layers.readonly).to include(readonly_layer)
+    end
+
+    it "should return an instance of itself" do
+      expect(layers.readonly).to be_a(BlobDispenser::Layers)
+    end
+  end
+
+  describe ".readonly?" do
+    subject { layers.readonly? }
+    context "with no layers" do
+      it { should be_false }
+    end
+
+    context "with no readonly layers" do
+      before { layers << layer }
+      it { should be_false }
+    end
+
+    context "with readonly layers" do
+      before { layers << readonly_layer }
+      it { should be_true }
+    end
+  end
+
+  describe ".writeable" do
+    before do
+      layers << layer
+      layers << readonly_layer
+    end
+
+    it "should only return the writeable layers" do
+      expect(layers.writeable).to include(layer)
+      expect(layers.writeable).not_to include(readonly_layer)
+    end
+
+    it "should return an instance of itself" do
+      expect(layers.writeable).to be_a(BlobDispenser::Layers)
+    end
+  end
+
+  describe ".writeable?" do
+    subject { layers.writeable? }
+    context "with no layers" do
+      it { should be_false }
+    end
+
+    context "with no writeable layers" do
+      before { layers << readonly_layer }
+      it { should be_false }
+    end
+
+    context "with writeable layers" do
       before { layers << layer }
       it { should be_true }
     end

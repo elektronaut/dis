@@ -1,11 +1,12 @@
 module BlobDispenser
   class Layer
-    attr_reader :connection, :delayed
+    attr_reader :connection
 
     def initialize(connection, options={})
       options = default_options.merge(options)
       @connection = connection
       @delayed = options[:delayed]
+      @readonly = options[:readonly]
     end
 
     def delayed?
@@ -16,10 +17,18 @@ module BlobDispenser
       !delayed?
     end
 
+    def readonly?
+      @readonly
+    end
+
+    def writeable?
+      !readonly?
+    end
+
     private
 
     def default_options
-      { delayed: false }
+      { delayed: false, readonly: false }
     end
   end
 end

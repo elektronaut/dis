@@ -29,5 +29,21 @@ module BlobDispenser
     def immediate?
       immediate.any?
     end
+
+    def readonly
+      self.class.new select { |layer| layer.readonly? }
+    end
+
+    def readonly?
+      readonly.any?
+    end
+
+    def writeable
+      self.class.new select { |layer| layer.writeable? }
+    end
+
+    def writeable?
+      writeable.any?
+    end
   end
 end

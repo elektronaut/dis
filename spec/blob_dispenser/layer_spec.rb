@@ -30,4 +30,32 @@ describe BlobDispenser::Layer do
       it { should be_true }
     end
   end
+
+  describe ".readonly?" do
+    subject { layer.readonly? }
+
+    context "when layer is readonly" do
+      let(:layer) { BlobDispenser::Layer.new(connection, readonly: true) }
+      it { should be_true }
+    end
+
+    context "when layer isn't readonly" do
+      let(:layer) { BlobDispenser::Layer.new(connection, readonly: false) }
+      it { should be_false }
+    end
+  end
+
+  describe ".writeable?" do
+    subject { layer.writeable? }
+
+    context "when layer is readonly" do
+      let(:layer) { BlobDispenser::Layer.new(connection, readonly: true) }
+      it { should be_false }
+    end
+
+    context "when layer isn't readonly" do
+      let(:layer) { BlobDispenser::Layer.new(connection, readonly: false) }
+      it { should be_true }
+    end
+  end
 end
