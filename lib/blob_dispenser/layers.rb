@@ -1,7 +1,21 @@
 module BlobDispenser
-  class Layers < Array
+  class Layers
+    include Enumerable
+
+    def initialize(layers=[])
+      @layers = layers
+    end
+
+    def <<(layer)
+      @layers << layer
+    end
+
+    def each
+      @layers.each { |layer| yield layer }
+    end
+
     def delayed
-      select { |layer| layer.delayed? }
+      self.class.new select { |layer| layer.delayed? }
     end
 
     def delayed?
@@ -9,7 +23,7 @@ module BlobDispenser
     end
 
     def immediate
-      select { |layer| layer.immediate? }
+      self.class.new select { |layer| layer.immediate? }
     end
 
     def immediate?

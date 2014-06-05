@@ -16,6 +16,10 @@ describe BlobDispenser::Layers do
       expect(layers.delayed).to include(delayed_layer)
       expect(layers.delayed).not_to include(layer)
     end
+
+    it "should return an instance of itself" do
+      expect(layers.delayed).to be_a(BlobDispenser::Layers)
+    end
   end
 
   describe ".delayed?" do
@@ -44,6 +48,10 @@ describe BlobDispenser::Layers do
     it "should only return the immediate layers" do
       expect(layers.immediate).to include(layer)
       expect(layers.immediate).not_to include(delayed_layer)
+    end
+
+    it "should return an instance of itself" do
+      expect(layers.immediate).to be_a(BlobDispenser::Layers)
     end
   end
 
