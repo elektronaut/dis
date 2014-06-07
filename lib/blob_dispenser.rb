@@ -1,5 +1,6 @@
 require "fog"
 require "blob_dispenser/engine"
+require "blob_dispenser/errors"
 require "blob_dispenser/layer"
 require "blob_dispenser/layers"
 
