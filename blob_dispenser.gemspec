@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.description = "BlobDispenser is a Rails engine that takes your uploaded files, de-duplicates them and stores them in layers."
   s.license     = "MIT"
 
-  s.files = Dir["{app,bin,config,db,lib,spec}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
+  s.files = Dir["{app,config,db,lib,spec}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
 
   s.add_dependency "rails", "~> 4.1.1"
   s.add_dependency "fog", "~> 1.22.1"
