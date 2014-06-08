@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require "fog"
 require "blob_dispenser/engine"
 require "blob_dispenser/errors"

@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module BlobDispenser
   class Layer
     attr_reader :connection
