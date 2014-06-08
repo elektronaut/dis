@@ -12,6 +12,10 @@ module Shrouded
       @layers << layer
     end
 
+    def clear!
+      @layers = []
+    end
+
     def each
       @layers.each { |layer| yield layer }
     end

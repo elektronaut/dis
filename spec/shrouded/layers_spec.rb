@@ -9,6 +9,16 @@ describe Shrouded::Layers do
   let(:readonly_layer) { Shrouded::Layer.new(connection, readonly: true) }
   let(:layers)         { Shrouded::Layers.new }
 
+  describe ".clear!" do
+    before { layers << layer }
+
+    it "clears the layers" do
+      expect(layers.count).to eq(1)
+      layers.clear!
+      expect(layers.count).to eq(0)
+    end
+  end
+
   describe ".delayed" do
     before do
       layers << layer

@@ -35,17 +35,12 @@ module Shrouded
 
     def store(hash, file)
       raise Shrouded::Errors::ReadOnlyError if readonly?
-      return get(hash) if exists?(hash)
-      directory!(hash).files.create(
-        key:    key_component(hash),
-        body:   file,
-        public: public?
-      )
+      store!(hash, file)
     end
 
     def exists?(hash)
-      directory(hash) &&
-      directory(hash).files.head(key_component(hash))
+      (directory(hash) &&
+      directory(hash).files.head(key_component(hash))) ? true : false
     end
 
     def get(hash)
@@ -56,11 +51,14 @@ module Shrouded
 
     def delete(hash)
       raise Shrouded::Errors::ReadOnlyError if readonly?
-      return false unless exists?(hash)
-      get(hash).destroy
+      delete!(hash)
     end
 
     private
+
+    def default_options
+      { delayed: false, readonly: false, public: false, path: nil }
+    end
 
     def directory_component(hash)
       [path, hash[0...2]].compact.join('/')
@@ -68,6 +66,11 @@ module Shrouded
 
     def key_component(hash)
       hash[2..hash.length]
+    end
+
+    def delete!(hash)
+      return false unless exists?(hash)
+      get(hash).destroy
     end
 
     def directory(hash)
@@ -83,12 +86,17 @@ module Shrouded
       dir
     end
 
-    def path
-      @path && !@path.empty? ? @path : nil
+    def store!(hash, file)
+      return get(hash) if exists?(hash)
+      directory!(hash).files.create(
+        key:    key_component(hash),
+        body:   (file.kind_of?(Fog::Model) ? file.body : file),
+        public: public?
+      )
     end
 
-    def default_options
-      { delayed: false, readonly: false, public: false, path: nil }
+    def path
+      @path && !@path.empty? ? @path : nil
     end
   end
 end

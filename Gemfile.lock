@@ -134,7 +134,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  shrouded!
   factory_girl_rails (~> 4.4.0)
   rspec-rails (~> 2.14.2)
+  shrouded!
   sqlite3
