@@ -2,13 +2,13 @@
 
 require 'spec_helper'
 
-describe BlobDispenser::Layer do
+describe Shrouded::Layer do
   let(:root_path)   { Rails.root.join('tmp', 'spec') }
   let(:target_path) { root_path.join('88', '43d7f92416211de9ebb963ff4ce28125932878') }
   let(:hash)        { '8843d7f92416211de9ebb963ff4ce28125932878' }
   let(:file)        { File.open(File.expand_path("../../support/fixtures/file.txt", __FILE__)) }
   let(:connection)  { Fog::Storage.new({provider: 'Local', local_root: root_path}) }
-  let(:layer)       { BlobDispenser::Layer.new(connection) }
+  let(:layer)       { Shrouded::Layer.new(connection) }
 
   after { FileUtils.rm_rf(root_path) if File.exists?(root_path) }
 
@@ -16,12 +16,12 @@ describe BlobDispenser::Layer do
     subject { layer.delayed? }
 
     context "when the layer is delayed" do
-      let(:layer) { BlobDispenser::Layer.new(connection, delayed: true) }
+      let(:layer) { Shrouded::Layer.new(connection, delayed: true) }
       it { should be_true }
     end
 
     context "when the layer isn't delayed" do
-      let(:layer) { BlobDispenser::Layer.new(connection, delayed: false) }
+      let(:layer) { Shrouded::Layer.new(connection, delayed: false) }
       it { should be_false }
     end
   end
@@ -30,12 +30,12 @@ describe BlobDispenser::Layer do
     subject { layer.immediate? }
 
     context "when the layer is delayed" do
-      let(:layer) { BlobDispenser::Layer.new(connection, delayed: true) }
+      let(:layer) { Shrouded::Layer.new(connection, delayed: true) }
       it { should be_false }
     end
 
     context "when the layer isn't delayed" do
-      let(:layer) { BlobDispenser::Layer.new(connection, delayed: false) }
+      let(:layer) { Shrouded::Layer.new(connection, delayed: false) }
       it { should be_true }
     end
   end
@@ -44,12 +44,12 @@ describe BlobDispenser::Layer do
     subject { layer.public? }
 
     context "when the layer is public" do
-      let(:layer) { BlobDispenser::Layer.new(connection, public: true) }
+      let(:layer) { Shrouded::Layer.new(connection, public: true) }
       it { should be_true }
     end
 
     context "when the layer isn't public" do
-      let(:layer) { BlobDispenser::Layer.new(connection, public: false) }
+      let(:layer) { Shrouded::Layer.new(connection, public: false) }
       it { should be_false }
     end
   end
@@ -58,12 +58,12 @@ describe BlobDispenser::Layer do
     subject { layer.readonly? }
 
     context "when the layer is readonly" do
-      let(:layer) { BlobDispenser::Layer.new(connection, readonly: true) }
+      let(:layer) { Shrouded::Layer.new(connection, readonly: true) }
       it { should be_true }
     end
 
     context "when the layer isn't readonly" do
-      let(:layer) { BlobDispenser::Layer.new(connection, readonly: false) }
+      let(:layer) { Shrouded::Layer.new(connection, readonly: false) }
       it { should be_false }
     end
   end
@@ -72,12 +72,12 @@ describe BlobDispenser::Layer do
     subject { layer.writeable? }
 
     context "when the layer is readonly" do
-      let(:layer) { BlobDispenser::Layer.new(connection, readonly: true) }
+      let(:layer) { Shrouded::Layer.new(connection, readonly: true) }
       it { should be_false }
     end
 
     context "when the layer isn't readonly" do
-      let(:layer) { BlobDispenser::Layer.new(connection, readonly: false) }
+      let(:layer) { Shrouded::Layer.new(connection, readonly: false) }
       it { should be_true }
     end
   end
@@ -138,7 +138,7 @@ describe BlobDispenser::Layer do
     end
 
     context "with a file and a path" do
-      let(:layer)       { BlobDispenser::Layer.new(connection, path: 'mypath') }
+      let(:layer)       { Shrouded::Layer.new(connection, path: 'mypath') }
       let(:target_path) { root_path.join('mypath', '88', '43d7f92416211de9ebb963ff4ce28125932878') }
       let!(:result) { layer.store(hash, file) }
 
@@ -165,9 +165,9 @@ describe BlobDispenser::Layer do
     end
 
     context "when layer is readonly" do
-      let(:layer) { BlobDispenser::Layer.new(connection, readonly: true) }
+      let(:layer) { Shrouded::Layer.new(connection, readonly: true) }
       it "raises an error" do
-        expect { result }.to raise_error(BlobDispenser::Errors::ReadOnlyError)
+        expect { result }.to raise_error(Shrouded::Errors::ReadOnlyError)
       end
     end
   end
@@ -195,10 +195,10 @@ describe BlobDispenser::Layer do
     end
 
     context "when the layer is readonly" do
-      let(:layer) { BlobDispenser::Layer.new(connection, readonly: true) }
+      let(:layer) { Shrouded::Layer.new(connection, readonly: true) }
 
       it "raises an error" do
-        expect { result }.to raise_error(BlobDispenser::Errors::ReadOnlyError)
+        expect { result }.to raise_error(Shrouded::Errors::ReadOnlyError)
       end
     end
   end

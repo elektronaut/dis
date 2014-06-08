@@ -11,7 +11,7 @@ require "active_record/railtie"
 # require "rails/test_unit/railtie"
 
 Bundler.require(*Rails.groups)
-require "blob_dispenser"
+require "shrouded"
 
 module Internal
   class Application < Rails::Application

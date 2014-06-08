@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    blob_dispenser (0.0.1)
+    shrouded (0.0.1)
       fog (~> 1.22.1)
       rails (~> 4.1.1)
 
@@ -134,7 +134,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  blob_dispenser!
+  shrouded!
   factory_girl_rails (~> 4.4.0)
   rspec-rails (~> 2.14.2)
   sqlite3

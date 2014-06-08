@@ -1,7 +1,7 @@
 # encoding: utf-8
 
-module BlobDispenser
+module Shrouded
   class Engine < ::Rails::Engine
-    isolate_namespace BlobDispenser
+    isolate_namespace Shrouded
   end
 end

@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-module BlobDispenser
+module Shrouded
   class Layers
     include Enumerable
 

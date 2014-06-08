@@ -3,17 +3,17 @@
 $:.push File.expand_path("../lib", __FILE__)
 
 # Maintain your gem's version:
-require "blob_dispenser/version"
+require "shrouded/version"
 
 # Describe your gem and declare its dependencies:
 Gem::Specification.new do |s|
-  s.name        = "blob_dispenser"
-  s.version     = BlobDispenser::VERSION
+  s.name        = "shrouded"
+  s.version     = Shrouded::VERSION
   s.authors     = ["Inge Jørgensen"]
   s.email       = ["inge@elektronaut.no"]
-  s.homepage    = "https://github.com/elektronaut/blob_dispenser"
+  s.homepage    = "https://github.com/elektronaut/shrouded"
   s.summary     = "Rails engine that stores your data blobs."
-  s.description = "BlobDispenser is a Rails engine that takes your uploaded files, de-duplicates them and stores them in layers."
+  s.description = "Shrouded is a Rails engine that takes your uploaded files, de-duplicates them and stores them in layers."
   s.license     = "MIT"
 
   s.files = Dir["{app,config,db,lib,spec}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]

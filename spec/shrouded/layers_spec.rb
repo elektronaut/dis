@@ -2,12 +2,12 @@
 
 require 'spec_helper'
 
-describe BlobDispenser::Layers do
+describe Shrouded::Layers do
   let(:connection)     { nil }
-  let(:layer)          { BlobDispenser::Layer.new(connection) }
-  let(:delayed_layer)  { BlobDispenser::Layer.new(connection, delayed: true) }
-  let(:readonly_layer) { BlobDispenser::Layer.new(connection, readonly: true) }
-  let(:layers)         { BlobDispenser::Layers.new }
+  let(:layer)          { Shrouded::Layer.new(connection) }
+  let(:delayed_layer)  { Shrouded::Layer.new(connection, delayed: true) }
+  let(:readonly_layer) { Shrouded::Layer.new(connection, readonly: true) }
+  let(:layers)         { Shrouded::Layers.new }
 
   describe ".delayed" do
     before do
@@ -21,7 +21,7 @@ describe BlobDispenser::Layers do
     end
 
     it "should return an instance of itself" do
-      expect(layers.delayed).to be_a(BlobDispenser::Layers)
+      expect(layers.delayed).to be_a(Shrouded::Layers)
     end
   end
 
@@ -54,7 +54,7 @@ describe BlobDispenser::Layers do
     end
 
     it "should return an instance of itself" do
-      expect(layers.immediate).to be_a(BlobDispenser::Layers)
+      expect(layers.immediate).to be_a(Shrouded::Layers)
     end
   end
 
@@ -87,7 +87,7 @@ describe BlobDispenser::Layers do
     end
 
     it "should return an instance of itself" do
-      expect(layers.readonly).to be_a(BlobDispenser::Layers)
+      expect(layers.readonly).to be_a(Shrouded::Layers)
     end
   end
 
@@ -120,7 +120,7 @@ describe BlobDispenser::Layers do
     end
 
     it "should return an instance of itself" do
-      expect(layers.writeable).to be_a(BlobDispenser::Layers)
+      expect(layers.writeable).to be_a(Shrouded::Layers)
     end
   end
 

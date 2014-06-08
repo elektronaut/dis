@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-module BlobDispenser
+module Shrouded
   class Layer
     attr_reader :connection
 
@@ -34,7 +34,7 @@ module BlobDispenser
     end
 
     def store(hash, file)
-      raise BlobDispenser::Errors::ReadOnlyError if readonly?
+      raise Shrouded::Errors::ReadOnlyError if readonly?
       return get(hash) if exists?(hash)
       directory!(hash).files.create(
         key:    key_component(hash),
@@ -55,7 +55,7 @@ module BlobDispenser
     end
 
     def delete(hash)
-      raise BlobDispenser::Errors::ReadOnlyError if readonly?
+      raise Shrouded::Errors::ReadOnlyError if readonly?
       return false unless exists?(hash)
       get(hash).destroy
     end
