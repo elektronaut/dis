@@ -1,7 +1,16 @@
+GIT
+  remote: https://github.com/rails/activemodel-globalid.git
+  revision: f6518693aa77231e5f907fdc763394c4e7c00b68
+  specs:
+    activemodel-globalid (0.1.0)
+      activemodel (>= 4.1.0)
+      activesupport (>= 4.1.0)
+
 PATH
   remote: .
   specs:
     shrouded (0.0.1)
+      activejob
       fog (~> 1.22.1)
       rails (~> 4.1.1)
 
@@ -21,6 +30,9 @@ GEM
       activesupport (= 4.1.1)
       builder (~> 3.1)
       erubis (~> 2.7.0)
+    activejob (0)
+      activemodel-globalid
+      activesupport (>= 4.1.0)
     activemodel (4.1.1)
       activesupport (= 4.1.1)
       builder (~> 3.1)
@@ -142,6 +154,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  activemodel-globalid!
   codeclimate-test-reporter
   factory_girl_rails (~> 4.4.0)
   rspec-rails (~> 2.14.2)

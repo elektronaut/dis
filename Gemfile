@@ -2,6 +2,8 @@ source "https://rubygems.org"
 
 gemspec
 
-gem "codeclimate-test-reporter", group: :test, require: nil
+# TODO: Remove this line when the activemodel-globalid gem
+# is updated with the railtie loading fix.
+gem "activemodel-globalid", git: "https://github.com/rails/activemodel-globalid.git", require: false
 
-#gem "activejob", git: "https://github.com/rails/activejob.git"
+gem "codeclimate-test-reporter", group: :test, require: nil
