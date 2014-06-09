@@ -23,6 +23,8 @@ the next version of
 [DynamicImage](https://github.com/elektronaut/dynamic_image)
 will be built on top of Shrouded.
 
+Requires Rails 4.1+ and Ruby 1.9.3+.
+
 ## Installation
 
 Add it to your Gemfile:
