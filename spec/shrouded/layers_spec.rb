@@ -38,17 +38,17 @@ describe Shrouded::Layers do
   describe ".delayed?" do
     subject { layers.delayed? }
     context "with no layers" do
-      it { should be_false }
+      it { should be false }
     end
 
     context "with only immediate layers" do
       before { layers << layer }
-      it { should be_false }
+      it { should be false }
     end
 
     context "with delayed layers" do
       before { layers << delayed_layer }
-      it { should be_true }
+      it { should be true }
     end
   end
 
@@ -71,17 +71,17 @@ describe Shrouded::Layers do
   describe ".immediate?" do
     subject { layers.immediate? }
     context "with no layers" do
-      it { should be_false }
+      it { should be false }
     end
 
     context "with only delayed layers" do
       before { layers << delayed_layer }
-      it { should be_false }
+      it { should be false }
     end
 
     context "with immediate layers" do
       before { layers << layer }
-      it { should be_true }
+      it { should be true }
     end
   end
 
@@ -104,17 +104,17 @@ describe Shrouded::Layers do
   describe ".readonly?" do
     subject { layers.readonly? }
     context "with no layers" do
-      it { should be_false }
+      it { should be false }
     end
 
     context "with no readonly layers" do
       before { layers << layer }
-      it { should be_false }
+      it { should be false }
     end
 
     context "with readonly layers" do
       before { layers << readonly_layer }
-      it { should be_true }
+      it { should be true }
     end
   end
 
@@ -137,17 +137,17 @@ describe Shrouded::Layers do
   describe ".writeable?" do
     subject { layers.writeable? }
     context "with no layers" do
-      it { should be_false }
+      it { should be false }
     end
 
     context "with no writeable layers" do
       before { layers << readonly_layer }
-      it { should be_false }
+      it { should be false }
     end
 
     context "with writeable layers" do
       before { layers << layer }
-      it { should be_true }
+      it { should be true }
     end
   end
 end

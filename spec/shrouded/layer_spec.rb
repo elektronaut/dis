@@ -17,12 +17,12 @@ describe Shrouded::Layer do
 
     context "when the layer is delayed" do
       let(:layer) { Shrouded::Layer.new(connection, delayed: true) }
-      it { should be_true }
+      it { should be true }
     end
 
     context "when the layer isn't delayed" do
       let(:layer) { Shrouded::Layer.new(connection, delayed: false) }
-      it { should be_false }
+      it { should be false }
     end
   end
 
@@ -31,12 +31,12 @@ describe Shrouded::Layer do
 
     context "when the layer is delayed" do
       let(:layer) { Shrouded::Layer.new(connection, delayed: true) }
-      it { should be_false }
+      it { should be false }
     end
 
     context "when the layer isn't delayed" do
       let(:layer) { Shrouded::Layer.new(connection, delayed: false) }
-      it { should be_true }
+      it { should be true }
     end
   end
 
@@ -45,12 +45,12 @@ describe Shrouded::Layer do
 
     context "when the layer is public" do
       let(:layer) { Shrouded::Layer.new(connection, public: true) }
-      it { should be_true }
+      it { should be true }
     end
 
     context "when the layer isn't public" do
       let(:layer) { Shrouded::Layer.new(connection, public: false) }
-      it { should be_false }
+      it { should be false }
     end
   end
 
@@ -59,12 +59,12 @@ describe Shrouded::Layer do
 
     context "when the layer is readonly" do
       let(:layer) { Shrouded::Layer.new(connection, readonly: true) }
-      it { should be_true }
+      it { should be true }
     end
 
     context "when the layer isn't readonly" do
       let(:layer) { Shrouded::Layer.new(connection, readonly: false) }
-      it { should be_false }
+      it { should be false }
     end
   end
 
@@ -73,12 +73,12 @@ describe Shrouded::Layer do
 
     context "when the layer is readonly" do
       let(:layer) { Shrouded::Layer.new(connection, readonly: true) }
-      it { should be_false }
+      it { should be false }
     end
 
     context "when the layer isn't readonly" do
       let(:layer) { Shrouded::Layer.new(connection, readonly: false) }
-      it { should be_true }
+      it { should be true }
     end
   end
 
@@ -113,11 +113,11 @@ describe Shrouded::Layer do
 
     context "when the file exists" do
       before { layer.store(hash, file) }
-      it { should be_true }
+      it { should be true }
     end
 
     context "when the file doesn't exist" do
-      it { should be_false }
+      it { should be false }
     end
   end
 
@@ -128,11 +128,11 @@ describe Shrouded::Layer do
       before { result }
 
       it "creates the directory" do
-        expect(File.exists?(root_path)).to be_true
+        expect(File.exists?(root_path)).to be true
       end
 
       it "stores the file" do
-        expect(File.exists?(target_path)).to be_true
+        expect(File.exists?(target_path)).to be true
         expect(File.read(target_path)).to eq("foobar")
       end
     end
@@ -147,11 +147,11 @@ describe Shrouded::Layer do
       end
 
       it "creates the directory" do
-        expect(File.exists?(root_path)).to be_true
+        expect(File.exists?(root_path)).to be true
       end
 
       it "stores the file" do
-        expect(File.exists?(target_path)).to be_true
+        expect(File.exists?(target_path)).to be true
         expect(File.read(target_path)).to eq("foobar")
       end
     end
@@ -180,17 +180,17 @@ describe Shrouded::Layer do
       let!(:result) { layer.delete(hash) }
 
       it "returns true" do
-        expect(result).to be_true
+        expect(result).to be true
       end
 
       it "deletes the file" do
-        expect(File.exists?(target_path)).to be_false
+        expect(File.exists?(target_path)).to be false
       end
     end
 
     context "when the file doesn't exist" do
       it "returns nil" do
-        expect(result).to be_false
+        expect(result).to be false
       end
     end
 

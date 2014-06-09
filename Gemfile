@@ -4,6 +4,17 @@ gemspec
 
 # TODO: Remove this line when the activemodel-globalid gem
 # is updated with the railtie loading fix.
-gem "activemodel-globalid", git: "https://github.com/rails/activemodel-globalid.git", require: false
+gem 'activemodel-globalid', git: 'https://github.com/rails/activemodel-globalid.git', require: false
 
-gem "codeclimate-test-reporter", group: :test, require: nil
+group :development do
+  gem 'guard'
+  gem 'guard-rspec'
+end
+
+group :test do
+  gem 'codeclimate-test-reporter', require: false
+end
+
+group :development, :test do
+  gem 'rspec-rails', '~> 2.99.0'
+end

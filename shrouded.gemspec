@@ -25,6 +25,4 @@ Gem::Specification.new do |s|
   s.add_dependency "activejob"
 
   s.add_development_dependency "sqlite3"
-  s.add_development_dependency "rspec-rails", "~> 2.14.2"
-  s.add_development_dependency "factory_girl_rails", "~> 4.4.0"
 end

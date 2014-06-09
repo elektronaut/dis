@@ -56,18 +56,18 @@ describe Shrouded::Storage do
 
       it "should store the file in immediate layers" do
         Shrouded::Storage.store(file)
-        expect(layer.exists?(hash)).to be_true
-        expect(second_layer.exists?(hash)).to be_true
+        expect(layer.exists?(hash)).to be true
+        expect(second_layer.exists?(hash)).to be true
       end
 
       it "should not store the file in delayed layers" do
         Shrouded::Storage.store(file)
-        expect(delayed_layer.exists?(hash)).to be_false
+        expect(delayed_layer.exists?(hash)).to be false
       end
 
       it "should not store the file in readonly layers" do
         Shrouded::Storage.store(file)
-        expect(readonly_layer.exists?(hash)).to be_false
+        expect(readonly_layer.exists?(hash)).to be false
       end
     end
 
@@ -103,15 +103,15 @@ describe Shrouded::Storage do
       before { Shrouded::Storage.delayed_store(hash) }
 
       it "should copy the file to delayed layers" do
-        expect(delayed_layer.exists?(hash)).to be_true
+        expect(delayed_layer.exists?(hash)).to be true
       end
 
       it "should not copy the file to immediate layers" do
-        expect(second_layer.exists?(hash)).to be_false
+        expect(second_layer.exists?(hash)).to be false
       end
 
       it "should not copy the file to readonly layers" do
-        expect(readonly_layer.exists?(hash)).to be_false
+        expect(readonly_layer.exists?(hash)).to be false
       end
     end
   end
@@ -128,7 +128,7 @@ describe Shrouded::Storage do
       before { delayed_layer.store(hash, file) }
 
       it "should return true" do
-        expect(Shrouded::Storage.exists?(hash)).to be_true
+        expect(Shrouded::Storage.exists?(hash)).to be true
       end
     end
 
@@ -136,7 +136,7 @@ describe Shrouded::Storage do
       before { all_layers.each { |layer| Shrouded::Storage.layers << layer } }
 
       it "should return false" do
-        expect(Shrouded::Storage.exists?(hash)).to be_false
+        expect(Shrouded::Storage.exists?(hash)).to be false
       end
     end
   end
@@ -166,7 +166,7 @@ describe Shrouded::Storage do
       end
 
       it "should not replicate to the second layer" do
-        expect(second_layer.exists?(hash)).to be_false
+        expect(second_layer.exists?(hash)).to be false
       end
     end
 
@@ -180,12 +180,12 @@ describe Shrouded::Storage do
       end
 
       it "should replicate to all immediate layers" do
-        expect(layer.exists?(hash)).to be_true
-        expect(second_layer.exists?(hash)).to be_true
+        expect(layer.exists?(hash)).to be true
+        expect(second_layer.exists?(hash)).to be true
       end
 
       it "should not replicate to delayed layers" do
-        expect(delayed_layer.exists?(hash)).to be_false
+        expect(delayed_layer.exists?(hash)).to be false
       end
     end
   end
@@ -221,16 +221,16 @@ describe Shrouded::Storage do
 
       it "should delete it from all immediate writeable layers" do
         Shrouded::Storage.delete(hash)
-        expect(layer.exists?(hash)).to be_false
-        expect(second_layer.exists?(hash)).to be_false
+        expect(layer.exists?(hash)).to be false
+        expect(second_layer.exists?(hash)).to be false
       end
 
       it "should not delete it from readonly layers" do
-        expect(readonly_layer.exists?(hash)).to be_true
+        expect(readonly_layer.exists?(hash)).to be true
       end
 
       it "should not delete it from delayed layers" do
-        expect(delayed_layer.exists?(hash)).to be_true
+        expect(delayed_layer.exists?(hash)).to be true
       end
     end
 
@@ -254,15 +254,15 @@ describe Shrouded::Storage do
     before {  }
 
     it "should delete the file from delayed layers" do
-      expect(delayed_layer.exists?(hash)).to be_false
+      expect(delayed_layer.exists?(hash)).to be false
     end
 
     it "should not delete the file from immediate layers" do
-      expect(layer.exists?(hash)).to be_true
+      expect(layer.exists?(hash)).to be true
     end
 
     it "should not delete the file from readonly layers" do
-      expect(readonly_layer.exists?(hash)).to be_true
+      expect(readonly_layer.exists?(hash)).to be true
     end
   end
 end
