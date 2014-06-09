@@ -8,13 +8,9 @@ gem 'activemodel-globalid', git: 'https://github.com/rails/activemodel-globalid.
 
 group :development do
   gem 'guard'
-  gem 'guard-rspec'
+  gem 'guard-rspec', require: false
 end
 
 group :test do
   gem 'codeclimate-test-reporter', require: false
-end
-
-group :development, :test do
-  gem 'rspec-rails', '~> 2.99.0'
 end

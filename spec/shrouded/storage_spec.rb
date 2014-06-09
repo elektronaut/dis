@@ -15,8 +15,8 @@ describe Shrouded::Storage do
   let(:all_layers)     { [layer, second_layer, delayed_layer, readonly_layer] }
 
   before do
-    Shrouded::Jobs::Delete.stub(:enqueue)
-    Shrouded::Jobs::Store.stub(:enqueue)
+    allow(Shrouded::Jobs::Delete).to receive(:enqueue)
+    allow(Shrouded::Jobs::Store).to receive(:enqueue)
   end
 
   after do
@@ -50,7 +50,7 @@ describe Shrouded::Storage do
       end
 
       it "should enqueue a job" do
-        Shrouded::Jobs::Store.should_receive(:enqueue).with(hash)
+        expect(Shrouded::Jobs::Store).to receive(:enqueue).with(hash)
         Shrouded::Storage.store(file)
       end
 
@@ -215,7 +215,7 @@ describe Shrouded::Storage do
       end
 
       it "should enqueue a job" do
-        Shrouded::Jobs::Delete.should_receive(:enqueue).with(hash)
+        expect(Shrouded::Jobs::Delete).to receive(:enqueue).with(hash)
         Shrouded::Storage.delete(hash)
       end
 
