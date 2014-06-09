@@ -7,7 +7,18 @@ module Shrouded
 
       def store(file)
         require_writeable_layers!
-        store_immediately!(file)
+        hash = store_immediately!(file)
+        if layers.delayed.writeable.any?
+          Shrouded::Jobs::Store.enqueue(hash)
+        end
+        hash
+      end
+
+      def delayed_store(hash)
+        file = get(hash)
+        layers.delayed.writeable.each do |layer|
+          layer.store(hash, file)
+        end
       end
 
       def exists?(hash)
@@ -38,7 +49,16 @@ module Shrouded
         layers.immediate.writeable.each do |layer|
           deleted = true if layer.delete(hash)
         end
+        if layers.delayed.writeable.any?
+          Shrouded::Jobs::Delete.enqueue(hash)
+        end
         deleted
+      end
+
+      def delayed_delete(hash)
+        layers.delayed.writeable.each do |layer|
+          layer.delete(hash)
+        end
       end
 
       private

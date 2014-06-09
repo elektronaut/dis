@@ -1,6 +1,6 @@
 # Shrouded [![Build Status](https://travis-ci.org/elektronaut/shrouded.png)](https://travis-ci.org/elektronaut/shrouded) [![Code Climate](https://codeclimate.com/github/elektronaut/shrouded.png)](https://codeclimate.com/github/elektronaut/shrouded) [![Code Climate](https://codeclimate.com/github/elektronaut/shrouded/coverage.png)](https://codeclimate.com/github/elektronaut/shrouded)
 
-**Warning:** Work in progress. Queued layers don't work yet, and the API is subject to change.
+**Warning:** Work in progress, the API is subject to change.
 
 Shrouded handles file uploads for your Rails app.
 It's similar to [Paperclip](https://github.com/thoughtbot/paperclip)

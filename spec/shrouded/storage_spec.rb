@@ -14,8 +14,15 @@ describe Shrouded::Storage do
   let(:readonly_layer) { Shrouded::Layer.new(connection, path: 'readonly', readonly: true) }
   let(:all_layers)     { [layer, second_layer, delayed_layer, readonly_layer] }
 
-  after { FileUtils.rm_rf(root_path) if File.exists?(root_path) }
-  after { Shrouded::Storage.layers.clear! }
+  before do
+    Shrouded::Jobs::Delete.stub(:enqueue)
+    Shrouded::Jobs::Store.stub(:enqueue)
+  end
+
+  after do
+    FileUtils.rm_rf(root_path) if File.exists?(root_path)
+    Shrouded::Storage.layers.clear!
+  end
 
   describe "#layers" do
     it "should be an instance of Shrouded::Layers" do
@@ -40,6 +47,11 @@ describe Shrouded::Storage do
 
       it "should return the hash" do
         expect(Shrouded::Storage.store(file)).to eq(hash)
+      end
+
+      it "should enqueue a job" do
+        Shrouded::Jobs::Store.should_receive(:enqueue).with(hash)
+        Shrouded::Storage.store(file)
       end
 
       it "should store the file in immediate layers" do
@@ -73,6 +85,33 @@ describe Shrouded::Storage do
 
       it "should return the hash" do
         expect(Shrouded::Storage.store(uploaded_file)).to eq(hash)
+      end
+    end
+  end
+
+  describe "#delayed_store" do
+    before { all_layers.each { |layer| Shrouded::Storage.layers << layer } }
+
+    context "when the file doesn't exist" do
+      it "should raise an error" do
+        expect { Shrouded::Storage.delayed_store(hash) }.to raise_error(Shrouded::Errors::NotFoundError)
+      end
+    end
+
+    context "when the file exists" do
+      before { layer.store(hash, file) }
+      before { Shrouded::Storage.delayed_store(hash) }
+
+      it "should copy the file to delayed layers" do
+        expect(delayed_layer.exists?(hash)).to be_true
+      end
+
+      it "should not copy the file to immediate layers" do
+        expect(second_layer.exists?(hash)).to be_false
+      end
+
+      it "should not copy the file to readonly layers" do
+        expect(readonly_layer.exists?(hash)).to be_false
       end
     end
   end
@@ -175,6 +214,11 @@ describe Shrouded::Storage do
         expect(Shrouded::Storage.delete(hash)).to eq(true)
       end
 
+      it "should enqueue a job" do
+        Shrouded::Jobs::Delete.should_receive(:enqueue).with(hash)
+        Shrouded::Storage.delete(hash)
+      end
+
       it "should delete it from all immediate writeable layers" do
         Shrouded::Storage.delete(hash)
         expect(layer.exists?(hash)).to be_false
@@ -196,6 +240,29 @@ describe Shrouded::Storage do
       it "should return false" do
         expect(Shrouded::Storage.delete(hash)).to eq(false)
       end
+    end
+  end
+
+  describe "#delayed_delete" do
+    before do
+      all_layers.each do |layer|
+        Shrouded::Storage.layers << layer
+        layer.send(:store!, hash, file)
+      end
+      Shrouded::Storage.delayed_delete(hash)
+    end
+    before {  }
+
+    it "should delete the file from delayed layers" do
+      expect(delayed_layer.exists?(hash)).to be_false
+    end
+
+    it "should not delete the file from immediate layers" do
+      expect(layer.exists?(hash)).to be_true
+    end
+
+    it "should not delete the file from readonly layers" do
+      expect(readonly_layer.exists?(hash)).to be_true
     end
   end
 end
