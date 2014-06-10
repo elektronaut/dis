@@ -33,25 +33,25 @@ module Shrouded
       !readonly?
     end
 
-    def store(hash, file)
+    def store(type, hash, file)
       raise Shrouded::Errors::ReadOnlyError if readonly?
-      store!(hash, file)
+      store!(type, hash, file)
     end
 
-    def exists?(hash)
-      (directory(hash) &&
-      directory(hash).files.head(key_component(hash))) ? true : false
+    def exists?(type, hash)
+      (directory(type, hash) &&
+      directory(type, hash).files.head(key_component(type, hash))) ? true : false
     end
 
-    def get(hash)
-      if dir = directory(hash)
-        dir.files.get(key_component(hash))
+    def get(type, hash)
+      if dir = directory(type, hash)
+        dir.files.get(key_component(type, hash))
       end
     end
 
-    def delete(hash)
+    def delete(type, hash)
       raise Shrouded::Errors::ReadOnlyError if readonly?
-      delete!(hash)
+      delete!(type, hash)
     end
 
     private
@@ -60,36 +60,36 @@ module Shrouded
       { delayed: false, readonly: false, public: false, path: nil }
     end
 
-    def directory_component(hash)
-      [path, hash[0...2]].compact.join('/')
+    def directory_component(type, hash)
+      [path, type, hash[0...2]].compact.join('/')
     end
 
-    def key_component(hash)
+    def key_component(type, hash)
       hash[2..hash.length]
     end
 
-    def delete!(hash)
-      return false unless exists?(hash)
-      get(hash).destroy
+    def delete!(type, hash)
+      return false unless exists?(type, hash)
+      get(type, hash).destroy
     end
 
-    def directory(hash)
-      connection.directories.get(directory_component(hash))
+    def directory(type, hash)
+      connection.directories.get(directory_component(type, hash))
     end
 
-    def directory!(hash)
-      dir = directory(hash)
+    def directory!(type, hash)
+      dir = directory(type, hash)
       dir ||= connection.directories.create(
-        key:    directory_component(hash),
+        key:    directory_component(type, hash),
         public: public?
       )
       dir
     end
 
-    def store!(hash, file)
-      return get(hash) if exists?(hash)
-      directory!(hash).files.create(
-        key:    key_component(hash),
+    def store!(type, hash, file)
+      return get(type, hash) if exists?(type, hash)
+      directory!(type, hash).files.create(
+        key:    key_component(type, hash),
         body:   (file.kind_of?(Fog::Model) ? file.body : file),
         public: public?
       )

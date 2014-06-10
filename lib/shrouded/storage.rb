@@ -5,36 +5,36 @@ module Shrouded
         @layers ||= Shrouded::Layers.new
       end
 
-      def store(file)
+      def store(type, file)
         require_writeable_layers!
-        hash = store_immediately!(file)
+        hash = store_immediately!(type, file)
         if layers.delayed.writeable.any?
-          Shrouded::Jobs::Store.enqueue(hash)
+          Shrouded::Jobs::Store.enqueue(type, hash)
         end
         hash
       end
 
-      def delayed_store(hash)
-        file = get(hash)
+      def delayed_store(type, hash)
+        file = get(type, hash)
         layers.delayed.writeable.each do |layer|
-          layer.store(hash, file)
+          layer.store(type, hash, file)
         end
       end
 
-      def exists?(hash)
+      def exists?(type, hash)
         require_layers!
         layers.each do |layer|
-          return true if layer.exists?(hash)
+          return true if layer.exists?(type, hash)
         end
         false
       end
 
-      def get(hash)
+      def get(type, hash)
         require_layers!
         miss = false
         layers.each do |layer|
-          if result = layer.get(hash)
-            store_immediately!(result) if miss
+          if result = layer.get(type, hash)
+            store_immediately!(type, result) if miss
             return result
           else
             miss = true
@@ -43,30 +43,30 @@ module Shrouded
         raise Shrouded::Errors::NotFoundError
       end
 
-      def delete(hash)
+      def delete(type, hash)
         require_writeable_layers!
         deleted = false
         layers.immediate.writeable.each do |layer|
-          deleted = true if layer.delete(hash)
+          deleted = true if layer.delete(type, hash)
         end
         if layers.delayed.writeable.any?
-          Shrouded::Jobs::Delete.enqueue(hash)
+          Shrouded::Jobs::Delete.enqueue(type, hash)
         end
         deleted
       end
 
-      def delayed_delete(hash)
+      def delayed_delete(type, hash)
         layers.delayed.writeable.each do |layer|
-          layer.delete(hash)
+          layer.delete(type, hash)
         end
       end
 
       private
 
-      def store_immediately!(file)
+      def store_immediately!(type, file)
         hash_file(file) do |hash|
           layers.immediate.writeable.each do |layer|
-            layer.store(hash, file)
+            layer.store(type, hash, file)
           end
         end
       end

@@ -85,10 +85,10 @@ You can interact directly with the store if you want.
 
 ```ruby
 file = File.open("foo.txt")
-hash = Shrouded::Storage.store(file) # => "8843d7f92416211de9ebb963ff4ce28125932878"
-Shrouded::Storage.exists?(hash)      # => true
-Shrouded::Storage.get(hash).body     # => "foobar"
-Shrouded::Storage.delete(hash)       # => true
+hash = Shrouded::Storage.store("stuff", file) # => "8843d7f92416211de9ebb963ff4ce28125932878"
+Shrouded::Storage.exists?("stuff", hash)      # => true
+Shrouded::Storage.get("stuff", hash).body     # => "foobar"
+Shrouded::Storage.delete("stuff", hash)       # => true
 ```
 
 ## License

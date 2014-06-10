@@ -3,8 +3,9 @@
 require 'spec_helper'
 
 describe Shrouded::Layer do
+  let(:type)        { 'test_files' }
   let(:root_path)   { Rails.root.join('tmp', 'spec') }
-  let(:target_path) { root_path.join('88', '43d7f92416211de9ebb963ff4ce28125932878') }
+  let(:target_path) { root_path.join(type, '88', '43d7f92416211de9ebb963ff4ce28125932878') }
   let(:hash)        { '8843d7f92416211de9ebb963ff4ce28125932878' }
   let(:file)        { File.open(File.expand_path("../../support/fixtures/file.txt", __FILE__)) }
   let(:connection)  { Fog::Storage.new({provider: 'Local', local_root: root_path}) }
@@ -83,10 +84,10 @@ describe Shrouded::Layer do
   end
 
   describe ".get" do
-    let(:result) { layer.get(hash) }
+    let(:result) { layer.get(type, hash) }
 
     context "when the file exists" do
-      before { layer.store(hash, file) }
+      before { layer.store(type, hash, file) }
 
       it "should retrieve the file" do
         expect(result).to be_a(Fog::Model)
@@ -101,7 +102,7 @@ describe Shrouded::Layer do
     end
 
     context "when the file doesn't exist, but the path does" do
-      before { FileUtils.mkdir_p(root_path.join('88')) }
+      before { FileUtils.mkdir_p(root_path.join(type, '88')) }
       it "should return nil" do
         expect(result).to be_nil
       end
@@ -109,10 +110,10 @@ describe Shrouded::Layer do
   end
 
   describe ".exists?" do
-    subject { layer.exists?(hash) }
+    subject { layer.exists?(type, hash) }
 
     context "when the file exists" do
-      before { layer.store(hash, file) }
+      before { layer.store(type, hash, file) }
       it { should be true }
     end
 
@@ -122,7 +123,7 @@ describe Shrouded::Layer do
   end
 
   describe ".store" do
-    let(:result) { layer.store(hash, file) }
+    let(:result) { layer.store(type, hash, file) }
 
     context "with a file" do
       before { result }
@@ -139,8 +140,8 @@ describe Shrouded::Layer do
 
     context "with a file and a path" do
       let(:layer)       { Shrouded::Layer.new(connection, path: 'mypath') }
-      let(:target_path) { root_path.join('mypath', '88', '43d7f92416211de9ebb963ff4ce28125932878') }
-      let!(:result) { layer.store(hash, file) }
+      let(:target_path) { root_path.join('mypath', type, '88', '43d7f92416211de9ebb963ff4ce28125932878') }
+      let!(:result) { layer.store(type, hash, file) }
 
       it "returns the file" do
         expect(result).to be_a(Fog::Model)
@@ -157,7 +158,7 @@ describe Shrouded::Layer do
     end
 
     context "when the file already exists" do
-      before { layer.store(hash, file) }
+      before { layer.store(type, hash, file) }
 
       it "returns the file" do
         expect(result).to be_a(Fog::Model)
@@ -173,11 +174,11 @@ describe Shrouded::Layer do
   end
 
   describe ".delete" do
-    let(:result) { layer.delete(hash) }
+    let(:result) { layer.delete(type, hash) }
 
     context "when the file exists" do
-      before { layer.store(hash, file) }
-      let!(:result) { layer.delete(hash) }
+      before { layer.store(type, hash, file) }
+      let!(:result) { layer.delete(type, hash) }
 
       it "returns true" do
         expect(result).to be true
