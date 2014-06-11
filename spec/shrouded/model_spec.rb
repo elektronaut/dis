@@ -78,11 +78,105 @@ describe Shrouded::Model do
     end
   end
 
+  describe ".data" do
+    context "when loading from the store" do
+      let(:existing_image) { Image.create(data: uploaded_file, accept: true) }
+      let(:image) { Image.find(existing_image.id) }
+      it "should return the content" do
+        expect(image.data).to eq("foobar")
+      end
+    end
+
+    context "when data is an uploaded file" do
+      let(:image) { Image.new(data: uploaded_file) }
+      it "should return the content" do
+        expect(image.data).to eq("foobar")
+      end
+    end
+
+    context "when data is a file" do
+      let(:image) { Image.new(data: file) }
+      it "should return the content" do
+        expect(image.data).to eq("foobar")
+      end
+    end
+
+    context "when data is a string" do
+      let(:image) { Image.new(data: "foobar") }
+      it "should return the content" do
+        expect(image.data).to eq("foobar")
+      end
+    end
+
+    context "when data isn't set" do
+      let(:image) { Image.new }
+      it "should return nil" do
+        expect(image.data).to be nil
+      end
+    end
+  end
+
   describe ".data=" do
+    let(:image) { Image.new }
+    before { image.data = uploaded_file }
+
+    it "should set the content length" do
+      expect(image.content_length).to eq(6)
+    end
+
+    it "should not store the file" do
+      expect(layer.exists?("images", hash)).to be false
+    end
+
+    context "with an existing object" do
+      let(:image) { Image.create(file: uploaded_file, accept: true) }
+
+      it "should reset the content hash" do
+        expect(image.content_hash).to be nil
+      end
+    end
+  end
+
+  describe ".data?" do
+    let(:image) { Image.new }
+    subject(:result) { image.data? }
+
+    context "when data hasn't been set" do
+      it "should be false" do
+        expect(result).to be false
+      end
+    end
+
+    context "when data has been set" do
+      before { image.data = uploaded_file }
+      it "should be true" do
+        expect(result).to be true
+      end
+    end
+
+    context "when the object has been saved" do
+      let(:existing_image) { Image.create(data: uploaded_file, accept: true) }
+      let(:image) { Image.find(existing_image.id) }
+      it "should be true" do
+        expect(result).to be true
+      end
+    end
+
+    context "when the object has been saved, but data has been set to nil" do
+      let(:existing_image) { Image.create(data: uploaded_file, accept: true) }
+      let(:image) { Image.find(existing_image.id) }
+      before { image.data = nil }
+      it "should be true" do
+        expect(result).to be false
+      end
+    end
+  end
+
+  describe ".file=" do
     let(:image) { Image.new }
 
     context "with an uploaded file" do
-      before { image.data = uploaded_file }
+      before { image.file = uploaded_file }
 
       it "should set the filename" do
         expect(image.filename).to eq(filename)

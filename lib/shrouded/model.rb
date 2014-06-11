@@ -37,11 +37,30 @@ module Shrouded
       end
     end
 
+    def data
+      @_cached_data ||= data_from(closest_data)
+    end
+
     def data=(new_data)
-      @shrouded_data = new_data
-      self.content_type = new_data.content_type
-      self.content_length = new_data.length
-      self.filename = new_data.original_filename
+      @_raw_data = new_data
+      @_cached_data = nil
+
+      self[shrouded_attribute(:content_hash)] = nil
+      self[shrouded_attribute(:content_length)] = if new_data.respond_to?(:length)
+        new_data.length
+      else
+        data.try(&:length).to_i
+      end
+    end
+
+    def data?
+      (@_raw_data || !self[shrouded_attribute(:content_hash)].blank?) ? true : false
+    end
+
+    def file=(new_data)
+      self.data = new_data
+      self[shrouded_attribute(:content_type)] = new_data.content_type
+      self[shrouded_attribute(:filename)] = new_data.original_filename
     end
 
     private
@@ -52,6 +71,26 @@ module Shrouded
 
     def shrouded_type
       self.class.shrouded_type
+    end
+
+    def data_from(object)
+      return nil unless object
+      if object.respond_to?(:body)
+        object.body
+      elsif object.respond_to?(:read)
+        object.rewind
+        object.read
+      else
+        object
+      end
+    end
+
+    def closest_data
+      if @_raw_data
+        @_raw_data
+      elsif !self[shrouded_attribute(:content_hash)].blank?
+        stored_data
+      end
     end
 
     def delete_data_if_unused(hash)
@@ -65,6 +104,10 @@ module Shrouded
       end
     end
 
+    def stored_data
+      Shrouded::Storage.get(shrouded_type, self[shrouded_attribute(:content_hash)])
+    end
+
     def cleanup_data
       if previous_hash = changes[shrouded_attribute(:content_hash)].try(&:first)
         delete_data_if_unused(previous_hash)
@@ -76,10 +119,10 @@ module Shrouded
     end
 
     def store_data
-      if @shrouded_data
+      if @_raw_data
         self[shrouded_attribute(:content_hash)] = Shrouded::Storage.store(
           shrouded_type,
-          @shrouded_data
+          @_raw_data
         )
       end
     end
