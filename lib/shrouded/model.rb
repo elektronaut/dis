@@ -4,6 +4,7 @@ module Shrouded
 
     included do
       before_save :store_data
+      after_save :cleanup_data
       after_destroy :delete_data
     end
 
@@ -53,7 +54,7 @@ module Shrouded
       self.class.shrouded_type
     end
 
-    def cleanup_data(hash)
+    def delete_data_if_unused(hash)
       unless self.class.where(
         shrouded_attribute(:content_hash) => hash
       ).any?
@@ -64,8 +65,14 @@ module Shrouded
       end
     end
 
+    def cleanup_data
+      if previous_hash = changes[shrouded_attribute(:content_hash)].try(&:first)
+        delete_data_if_unused(previous_hash)
+      end
+    end
+
     def delete_data
-      cleanup_data(self[shrouded_attribute(:content_hash)])
+      delete_data_if_unused(self[shrouded_attribute(:content_hash)])
     end
 
     def store_data

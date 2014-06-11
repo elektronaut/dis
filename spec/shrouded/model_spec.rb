@@ -102,7 +102,7 @@ describe Shrouded::Model do
     end
   end
 
-  describe "Save callbacks" do
+  describe "storage callback" do
     context "when object is invalid" do
       let!(:image) { Image.create(data: uploaded_file) }
 
@@ -122,9 +122,51 @@ describe Shrouded::Model do
         expect(layer.exists?("images", hash)).to be true
       end
     end
+
+    context "when data changes" do
+      let(:new_hash)          { 'aa1d7eef5b608ac42d09af74bb012bb29c9c57dd' }
+      let(:new_file)          { File.open(File.expand_path("../../support/fixtures/other_file.txt", __FILE__)) }
+      let(:new_uploaded_file) { Rack::Test::UploadedFile.new(new_file, content_type) }
+      let!(:image)            { Image.create(data: uploaded_file, accept: true) }
+
+      context "and the object is valid" do
+        before { image.update(data: new_uploaded_file, accept: true) }
+
+        it "should store the new file" do
+          expect(layer.exists?("images", new_hash)).to be true
+        end
+
+        it "should remove the old file" do
+          expect(layer.exists?("images", hash)).to be false
+        end
+      end
+
+      context "and the object is not valid" do
+        before { image.update(data: new_uploaded_file, accept: nil) }
+
+        it "should not store the new file" do
+          expect(image.valid?).to be false
+          expect(layer.exists?("images", new_hash)).to be false
+        end
+
+        it "should not remove the old file" do
+          expect(layer.exists?("images", hash)).to be true
+        end
+      end
+
+      context "when another record exists" do
+        before { Image.create(data: uploaded_file, accept: true) }
+        before { image.update(data: new_uploaded_file, accept: true) }
+
+        it "should not remove the old file" do
+          expect(layer.exists?("images", hash)).to be true
+        end
+      end
+
+    end
   end
 
-  describe "Destroy callback" do
+  describe "delete callback" do
     context "when duplicates exist" do
       let!(:image) { Image.create(data: uploaded_file, accept: true) }
       let!(:other_image) { Image.create(data: uploaded_file, accept: true) }
