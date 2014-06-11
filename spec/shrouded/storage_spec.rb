@@ -3,6 +3,7 @@
 require 'spec_helper'
 
 describe Shrouded::Storage do
+  let(:type)           { 'test_files' }
   let(:root_path)      { Rails.root.join('tmp', 'spec') }
   let(:hash)           { '8843d7f92416211de9ebb963ff4ce28125932878' }
   let(:file)           { File.open(File.expand_path("../../support/fixtures/file.txt", __FILE__)) }
@@ -38,7 +39,7 @@ describe Shrouded::Storage do
       end
 
       it "should raise an error" do
-        expect { Shrouded::Storage.store(file) }.to raise_error(Shrouded::Errors::NoLayersError)
+        expect { Shrouded::Storage.store(type, file) }.to raise_error(Shrouded::Errors::NoLayersError)
       end
     end
 
@@ -46,28 +47,28 @@ describe Shrouded::Storage do
       before { all_layers.each { |layer| Shrouded::Storage.layers << layer } }
 
       it "should return the hash" do
-        expect(Shrouded::Storage.store(file)).to eq(hash)
+        expect(Shrouded::Storage.store(type, file)).to eq(hash)
       end
 
       it "should enqueue a job" do
-        expect(Shrouded::Jobs::Store).to receive(:enqueue).with(hash)
-        Shrouded::Storage.store(file)
+        expect(Shrouded::Jobs::Store).to receive(:enqueue).with(type, hash)
+        Shrouded::Storage.store(type, file)
       end
 
       it "should store the file in immediate layers" do
-        Shrouded::Storage.store(file)
-        expect(layer.exists?(hash)).to be true
-        expect(second_layer.exists?(hash)).to be true
+        Shrouded::Storage.store(type, file)
+        expect(layer.exists?(type, hash)).to be true
+        expect(second_layer.exists?(type, hash)).to be true
       end
 
       it "should not store the file in delayed layers" do
-        Shrouded::Storage.store(file)
-        expect(delayed_layer.exists?(hash)).to be false
+        Shrouded::Storage.store(type, file)
+        expect(delayed_layer.exists?(type, hash)).to be false
       end
 
       it "should not store the file in readonly layers" do
-        Shrouded::Storage.store(file)
-        expect(readonly_layer.exists?(hash)).to be false
+        Shrouded::Storage.store(type, file)
+        expect(readonly_layer.exists?(type, hash)).to be false
       end
     end
 
@@ -76,7 +77,7 @@ describe Shrouded::Storage do
       before { Shrouded::Storage.layers << layer }
 
       it "should return the hash" do
-        expect(Shrouded::Storage.store(file)).to eq(hash)
+        expect(Shrouded::Storage.store(type, file)).to eq(hash)
       end
     end
 
@@ -84,7 +85,7 @@ describe Shrouded::Storage do
       before { Shrouded::Storage.layers << layer }
 
       it "should return the hash" do
-        expect(Shrouded::Storage.store(uploaded_file)).to eq(hash)
+        expect(Shrouded::Storage.store(type, uploaded_file)).to eq(hash)
       end
     end
   end
@@ -94,24 +95,24 @@ describe Shrouded::Storage do
 
     context "when the file doesn't exist" do
       it "should raise an error" do
-        expect { Shrouded::Storage.delayed_store(hash) }.to raise_error(Shrouded::Errors::NotFoundError)
+        expect { Shrouded::Storage.delayed_store(type, hash) }.to raise_error(Shrouded::Errors::NotFoundError)
       end
     end
 
     context "when the file exists" do
-      before { layer.store(hash, file) }
-      before { Shrouded::Storage.delayed_store(hash) }
+      before { layer.store(type, hash, file) }
+      before { Shrouded::Storage.delayed_store(type, hash) }
 
       it "should copy the file to delayed layers" do
-        expect(delayed_layer.exists?(hash)).to be true
+        expect(delayed_layer.exists?(type, hash)).to be true
       end
 
       it "should not copy the file to immediate layers" do
-        expect(second_layer.exists?(hash)).to be false
+        expect(second_layer.exists?(type, hash)).to be false
       end
 
       it "should not copy the file to readonly layers" do
-        expect(readonly_layer.exists?(hash)).to be false
+        expect(readonly_layer.exists?(type, hash)).to be false
       end
     end
   end
@@ -119,16 +120,16 @@ describe Shrouded::Storage do
   describe "#exists?" do
     context "with no layers" do
       it "should raise an error" do
-        expect { Shrouded::Storage.exists?(hash) }.to raise_error(Shrouded::Errors::NoLayersError)
+        expect { Shrouded::Storage.exists?(type, hash) }.to raise_error(Shrouded::Errors::NoLayersError)
       end
     end
 
     context "when the file exists in any layer" do
       before { all_layers.each { |layer| Shrouded::Storage.layers << layer } }
-      before { delayed_layer.store(hash, file) }
+      before { delayed_layer.store(type, hash, file) }
 
       it "should return true" do
-        expect(Shrouded::Storage.exists?(hash)).to be true
+        expect(Shrouded::Storage.exists?(type, hash)).to be true
       end
     end
 
@@ -136,7 +137,7 @@ describe Shrouded::Storage do
       before { all_layers.each { |layer| Shrouded::Storage.layers << layer } }
 
       it "should return false" do
-        expect(Shrouded::Storage.exists?(hash)).to be false
+        expect(Shrouded::Storage.exists?(type, hash)).to be false
       end
     end
   end
@@ -144,7 +145,7 @@ describe Shrouded::Storage do
   describe "#get" do
     context "with no layers" do
       it "should raise a NoLayersError" do
-        expect { Shrouded::Storage.get(hash) }.to raise_error(Shrouded::Errors::NoLayersError)
+        expect { Shrouded::Storage.get(type, hash) }.to raise_error(Shrouded::Errors::NoLayersError)
       end
     end
 
@@ -152,40 +153,40 @@ describe Shrouded::Storage do
       before { Shrouded::Storage.layers << layer }
 
       it "should raise an NotFoundError" do
-        expect { Shrouded::Storage.get(hash) }.to raise_error(Shrouded::Errors::NotFoundError)
+        expect { Shrouded::Storage.get(type, hash) }.to raise_error(Shrouded::Errors::NotFoundError)
       end
     end
 
     context "when the file exists in the first layer" do
       before { all_layers.each { |layer| Shrouded::Storage.layers << layer } }
-      before { layer.store(hash, file) }
-      let!(:result) { Shrouded::Storage.get(hash) }
+      before { layer.store(type, hash, file) }
+      let!(:result) { Shrouded::Storage.get(type, hash) }
 
       it "should find the file" do
         expect(result).to be_a(Fog::Model)
       end
 
       it "should not replicate to the second layer" do
-        expect(second_layer.exists?(hash)).to be false
+        expect(second_layer.exists?(type, hash)).to be false
       end
     end
 
     context "when the file exist, but not in the first layer" do
       before { all_layers.each { |layer| Shrouded::Storage.layers << layer } }
-      before { readonly_layer.send(:store!, hash, file) }
-      let!(:result) { Shrouded::Storage.get(hash) }
+      before { readonly_layer.send(:store!, type, hash, file) }
+      let!(:result) { Shrouded::Storage.get(type, hash) }
 
       it "should find the file" do
         expect(result).to be_a(Fog::Model)
       end
 
       it "should replicate to all immediate layers" do
-        expect(layer.exists?(hash)).to be true
-        expect(second_layer.exists?(hash)).to be true
+        expect(layer.exists?(type, hash)).to be true
+        expect(second_layer.exists?(type, hash)).to be true
       end
 
       it "should not replicate to delayed layers" do
-        expect(delayed_layer.exists?(hash)).to be false
+        expect(delayed_layer.exists?(type, hash)).to be false
       end
     end
   end
@@ -198,39 +199,39 @@ describe Shrouded::Storage do
       end
 
       it "should raise an error" do
-        expect { Shrouded::Storage.delete(hash) }.to raise_error(Shrouded::Errors::NoLayersError)
+        expect { Shrouded::Storage.delete(type, hash) }.to raise_error(Shrouded::Errors::NoLayersError)
       end
     end
 
     context "when the file exists" do
       before do
         all_layers.each do |layer|
-          layer.send(:store!, hash, file)
+          layer.send(:store!, type, hash, file)
           Shrouded::Storage.layers << layer
         end
       end
 
       it "should return true" do
-        expect(Shrouded::Storage.delete(hash)).to eq(true)
+        expect(Shrouded::Storage.delete(type, hash)).to eq(true)
       end
 
       it "should enqueue a job" do
-        expect(Shrouded::Jobs::Delete).to receive(:enqueue).with(hash)
-        Shrouded::Storage.delete(hash)
+        expect(Shrouded::Jobs::Delete).to receive(:enqueue).with(type, hash)
+        Shrouded::Storage.delete(type, hash)
       end
 
       it "should delete it from all immediate writeable layers" do
-        Shrouded::Storage.delete(hash)
-        expect(layer.exists?(hash)).to be false
-        expect(second_layer.exists?(hash)).to be false
+        Shrouded::Storage.delete(type, hash)
+        expect(layer.exists?(type, hash)).to be false
+        expect(second_layer.exists?(type, hash)).to be false
       end
 
       it "should not delete it from readonly layers" do
-        expect(readonly_layer.exists?(hash)).to be true
+        expect(readonly_layer.exists?(type, hash)).to be true
       end
 
       it "should not delete it from delayed layers" do
-        expect(delayed_layer.exists?(hash)).to be true
+        expect(delayed_layer.exists?(type, hash)).to be true
       end
     end
 
@@ -238,7 +239,7 @@ describe Shrouded::Storage do
       before { Shrouded::Storage.layers << layer }
 
       it "should return false" do
-        expect(Shrouded::Storage.delete(hash)).to eq(false)
+        expect(Shrouded::Storage.delete(type, hash)).to eq(false)
       end
     end
   end
@@ -247,22 +248,22 @@ describe Shrouded::Storage do
     before do
       all_layers.each do |layer|
         Shrouded::Storage.layers << layer
-        layer.send(:store!, hash, file)
+        layer.send(:store!, type, hash, file)
       end
-      Shrouded::Storage.delayed_delete(hash)
+      Shrouded::Storage.delayed_delete(type, hash)
     end
     before {  }
 
     it "should delete the file from delayed layers" do
-      expect(delayed_layer.exists?(hash)).to be false
+      expect(delayed_layer.exists?(type, hash)).to be false
     end
 
     it "should not delete the file from immediate layers" do
-      expect(layer.exists?(hash)).to be true
+      expect(layer.exists?(type, hash)).to be true
     end
 
     it "should not delete the file from readonly layers" do
-      expect(readonly_layer.exists?(hash)).to be true
+      expect(readonly_layer.exists?(type, hash)).to be true
     end
   end
 end

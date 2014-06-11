@@ -3,8 +3,8 @@ module Shrouded
     class Store < ActiveJob::Base
       queue_as :shrouded
 
-      def perform(hash)
-        Shrouded::Storage.delayed_store(hash)
+      def perform(type, hash)
+        Shrouded::Storage.delayed_store(type, hash)
       end
     end
   end
