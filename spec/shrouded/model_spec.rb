@@ -1,12 +1,6 @@
 require 'spec_helper'
 
 describe Shrouded::Model do
-  class WithCustomAttributes < ActiveRecord::Base
-    include Shrouded::Model
-    self.shrouded_attributes = { filename: :uploaded_filename, content_type: :type }
-    self.shrouded_type = "custom"
-  end
-
   let(:hash)          { '8843d7f92416211de9ebb963ff4ce28125932878' }
   let(:content_type)  { 'text/plain' }
   let(:filename)      { 'file.txt' }
@@ -16,8 +10,6 @@ describe Shrouded::Model do
   let(:connection)    { Fog::Storage.new({provider: 'Local', local_root: root_path}) }
   let(:layer)         { Shrouded::Layer.new(connection) }
 
-  subject { Image }
-
   before do
     Shrouded::Storage.layers << layer
   end
@@ -25,52 +17,6 @@ describe Shrouded::Model do
   after do
     FileUtils.rm_rf(root_path) if File.exists?(root_path)
     Shrouded::Storage.layers.clear!
-  end
-
-  describe ".shrouded_attributes" do
-    subject(:attributes) { model.shrouded_attributes }
-
-    context "with no attributes specified" do
-      let(:model) { Image }
-      it "should return the default attributes" do
-        expect(attributes).to eq({
-          content_hash: :content_hash,
-          content_length: :content_length,
-          content_type: :content_type,
-          filename: :filename
-        })
-      end
-    end
-
-    context "with custom attributes" do
-      let(:model) { WithCustomAttributes }
-      it "should return the attributes" do
-        expect(attributes).to eq({
-          content_hash: :content_hash,
-          content_length: :content_length,
-          content_type: :type,
-          filename: :uploaded_filename
-        })
-      end
-    end
-  end
-
-  describe ".shrouded_type" do
-    subject(:type) { model.shrouded_type }
-
-    context "with no attributes specified" do
-      let(:model) { Image }
-      it "should return the table name" do
-        expect(type).to eq("images")
-      end
-    end
-
-    context "with custom attributes" do
-      let(:model) { WithCustomAttributes }
-      it "should return the type" do
-        expect(type).to eq("custom")
-      end
-    end
   end
 
   describe "#data" do

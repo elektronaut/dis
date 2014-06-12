@@ -27,7 +27,7 @@ Requires Rails 4.1+ and Ruby 1.9.3+.
 
 ## Installation
 
-Add it to your Gemfile:
+You know this:
 
 ```ruby
 gem "shrouded"
