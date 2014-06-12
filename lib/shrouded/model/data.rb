@@ -1,8 +1,6 @@
 module Shrouded
   module Model
     class Data
-      attr_reader :record, :raw
-
       def initialize(record, raw=nil)
         @record = record
         @raw = raw
@@ -29,25 +27,15 @@ module Shrouded
       end
 
       def expire(hash)
-        unless record.class.where(
-          record.class.shrouded_attributes[:content_hash] => hash
+        unless @record.class.where(
+          @record.class.shrouded_attributes[:content_hash] => hash
         ).any?
-          Shrouded::Storage.delete(
-            record.class.shrouded_type,
-            hash
-          )
+          Shrouded::Storage.delete(storage_type, hash)
         end
       end
 
-      def raw?
-        raw ? true : false
-      end
-
       def store!
-        Shrouded::Storage.store(
-          record.class.shrouded_type,
-          raw
-        )
+        Shrouded::Storage.store(storage_type, raw)
       end
 
       private
@@ -61,7 +49,11 @@ module Shrouded
       end
 
       def content_hash
-        record[record.class.shrouded_attributes[:content_hash]]
+        @record[@record.class.shrouded_attributes[:content_hash]]
+      end
+
+      def raw?
+        raw ? true : false
       end
 
       def read_from(object)
@@ -76,15 +68,23 @@ module Shrouded
         end
       end
 
+      def storage_type
+        @record.class.shrouded_type
+      end
+
       def stored?
         !content_hash.blank?
       end
 
       def stored
         Shrouded::Storage.get(
-          record.class.shrouded_type,
+          storage_type,
           content_hash
         )
+      end
+
+      def raw
+        @raw
       end
     end
   end
