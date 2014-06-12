@@ -3,10 +3,9 @@ module Shrouded
     class Data
       attr_reader :record, :raw
 
-      def initialize(record)
+      def initialize(record, raw=nil)
         @record = record
-        @raw = nil
-        @cached = nil
+        @raw = raw
       end
 
       def any?
@@ -42,11 +41,6 @@ module Shrouded
 
       def raw?
         raw ? true : false
-      end
-
-      def set(new_data)
-        @cached = nil
-        @raw = new_data
       end
 
       def store!

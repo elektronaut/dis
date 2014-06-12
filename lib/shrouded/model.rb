@@ -20,7 +20,7 @@ module Shrouded
     end
 
     def data=(new_data)
-      shrouded_data.set(new_data)
+      @shrouded_data = Shrouded::Model::Data.new(self, new_data)
       shrouded_set :content_hash, nil
       shrouded_set :content_length, shrouded_data.content_length
     end
