@@ -144,7 +144,20 @@ describe Shrouded::Model do
       end
     end
 
-    context "when data changes" do
+    context "when data changes to nil" do
+      let!(:image) { Image.create(data: uploaded_file, accept: true) }
+      before { image.update(data: nil, accept: true) }
+
+      it "should remove the old file" do
+        expect(layer.exists?("images", hash)).to be false
+      end
+
+      it "should be nil when reloaded" do
+        expect(Image.find(image.id).data).to be nil
+      end
+    end
+
+    context "when data changes to a new file" do
       let(:new_hash)          { 'aa1d7eef5b608ac42d09af74bb012bb29c9c57dd' }
       let(:new_file)          { File.open(File.expand_path("../../support/fixtures/other_file.txt", __FILE__)) }
       let(:new_uploaded_file) { Rack::Test::UploadedFile.new(new_file, content_type) }
