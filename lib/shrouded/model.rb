@@ -10,24 +10,32 @@ module Shrouded
       @_cached_data ||= data_from(closest_data)
     end
 
-    def data=(new_data)
-      @_raw_data = new_data
-      @_cached_data = nil
-      self[shrouded_attribute(:content_hash)] = nil
-      self[shrouded_attribute(:content_length)] = detect_content_length
+    def data?
+      raw_data? || stored_data?
     end
 
-    def data?
-      (@_raw_data || !self[shrouded_attribute(:content_hash)].blank?) ? true : false
+    def data=(new_data)
+      self.raw_data = new_data
+      @_cached_data = nil
+      shrouded_set :content_hash, nil
+      shrouded_set :content_length, detect_content_length
     end
 
     def file=(file)
       self.data = file
-      self[shrouded_attribute(:content_type)] = file.content_type
-      self[shrouded_attribute(:filename)] = file.original_filename
+      shrouded_set :content_type, file.content_type
+      shrouded_set :filename, file.original_filename
     end
 
     private
+
+    def shrouded_set(attribute_name, value)
+      self[shrouded_attribute(attribute_name)] = value
+    end
+
+    def shrouded_get(attribute_name)
+      self[shrouded_attribute(attribute_name)]
+    end
 
     def shrouded_attribute(attribute_name)
       self.class.shrouded_attributes[attribute_name]
@@ -50,23 +58,39 @@ module Shrouded
     end
 
     def closest_data
-      if @_raw_data
-        @_raw_data
-      elsif !self[shrouded_attribute(:content_hash)].blank?
+      if raw_data?
+        raw_data
+      elsif stored_data?
         stored_data
       end
     end
 
     def detect_content_length
-      if @_raw_data.respond_to?(:length)
-        @_raw_data.length
+      if raw_data.respond_to?(:length)
+        raw_data.length
       else
         data.try(&:length).to_i
       end
     end
 
+    def raw_data?
+      raw_data ? true : false
+    end
+
+    def raw_data
+      @raw_data
+    end
+
+    def raw_data=(new_data)
+      @raw_data = new_data
+    end
+
+    def stored_data?
+      !shrouded_get(:content_hash).blank?
+    end
+
     def stored_data
-      Shrouded::Storage.get(shrouded_type, self[shrouded_attribute(:content_hash)])
+      Shrouded::Storage.get(shrouded_type, shrouded_get(:content_hash))
     end
   end
 end

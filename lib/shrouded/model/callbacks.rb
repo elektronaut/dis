@@ -18,7 +18,7 @@ module Shrouded
       end
 
       def delete_data
-        delete_data_if_unused(self[shrouded_attribute(:content_hash)])
+        delete_data_if_unused(shrouded_get(:content_hash))
       end
 
       def delete_data_if_unused(hash)
@@ -33,10 +33,10 @@ module Shrouded
       end
 
       def store_data
-        if @_raw_data
-          self[shrouded_attribute(:content_hash)] = Shrouded::Storage.store(
+        if raw_data?
+          shrouded_set :content_hash, Shrouded::Storage.store(
             shrouded_type,
-            @_raw_data
+            raw_data
           )
         end
       end
