@@ -1,20 +1,11 @@
 require 'spec_helper'
 
 describe Shrouded::Model::Data do
-  class Image < ActiveRecord::Base
-    shrouded_model
-    attr_accessor :accept
-    validates :accept, presence: true
-  end
-
   let(:hash)          { '8843d7f92416211de9ebb963ff4ce28125932878' }
-  let(:content_type)  { 'text/plain' }
-  let(:filename)      { 'file.txt' }
   let(:root_path)     { Rails.root.join('tmp', 'spec') }
   let(:file)          { File.open(File.expand_path("../../../support/fixtures/file.txt", __FILE__)) }
-  let(:uploaded_file) { Rack::Test::UploadedFile.new(file, content_type) }
-  let(:connection)    { Fog::Storage.new({provider: 'Local', local_root: root_path}) }
-  let(:layer)         { Shrouded::Layer.new(connection) }
+  let(:uploaded_file) { Rack::Test::UploadedFile.new(file, 'text/plain') }
+  let(:layer)         { Shrouded::Layer.new(Fog::Storage.new({provider: 'Local', local_root: root_path})) }
   let(:image)         { Image.new }
   let(:data)          { Shrouded::Model::Data.new(image) }
 

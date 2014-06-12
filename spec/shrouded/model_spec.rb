@@ -1,12 +1,6 @@
 require 'spec_helper'
 
 describe Shrouded::Model do
-  class Image < ActiveRecord::Base
-    shrouded_model
-    attr_accessor :accept
-    validates :accept, presence: true
-  end
-
   class WithCustomAttributes < ActiveRecord::Base
     shrouded_model attributes: { filename: :uploaded_filename, content_type: :type },
                    type: 'custom'
