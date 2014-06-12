@@ -2,8 +2,9 @@ require 'spec_helper'
 
 describe Shrouded::Model do
   class WithCustomAttributes < ActiveRecord::Base
-    shrouded_model attributes: { filename: :uploaded_filename, content_type: :type },
-                   type: 'custom'
+    include Shrouded::Model
+    self.shrouded_attributes = { filename: :uploaded_filename, content_type: :type }
+    self.shrouded_type = "custom"
   end
 
   let(:hash)          { '8843d7f92416211de9ebb963ff4ce28125932878' }

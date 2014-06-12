@@ -48,7 +48,7 @@ not validate any data, you are expected to use the Rails validators.
 
 ```ruby
 class Document < ActiveRecord::Base
-  shrouded_model
+  include Shrouded::Model
   validates :data, presence: true
   validates :content_type, presence: true, format: /\Aapplication\/(x\-)?pdf\z/
   validates :filename, presence: true, format: /\A[\w_\-\.]+\.pdf\z/i

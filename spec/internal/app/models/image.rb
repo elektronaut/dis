@@ -1,5 +1,5 @@
 class Image < ActiveRecord::Base
-  shrouded_model
+  include Shrouded::Model
   attr_accessor :accept
   validates :accept, presence: true
 end

@@ -5,17 +5,15 @@ module Shrouded
         default_shrouded_attributes.merge(@shrouded_attributes || {})
       end
 
+      def shrouded_attributes=(new_attributes)
+        @shrouded_attributes = new_attributes
+      end
+
       def shrouded_type
         @shrouded_type || self.table_name
       end
 
-      private
-
-      def set_shrouded_attributes(new_attributes)
-        @shrouded_attributes = new_attributes
-      end
-
-      def set_shrouded_type(new_type)
+      def shrouded_type=(new_type)
         @shrouded_type = new_type
       end
 
