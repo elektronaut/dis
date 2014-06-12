@@ -44,13 +44,8 @@ module Shrouded
     def data=(new_data)
       @_raw_data = new_data
       @_cached_data = nil
-
       self[shrouded_attribute(:content_hash)] = nil
-      self[shrouded_attribute(:content_length)] = if new_data.respond_to?(:length)
-        new_data.length
-      else
-        data.try(&:length).to_i
-      end
+      self[shrouded_attribute(:content_length)] = detect_content_length
     end
 
     def data?
@@ -101,6 +96,14 @@ module Shrouded
           shrouded_type,
           hash
         )
+      end
+    end
+
+    def detect_content_length
+      if @_raw_data.respond_to?(:length)
+        @_raw_data.length
+      else
+        data.try(&:length).to_i
       end
     end
 
