@@ -1,4 +1,4 @@
-require 'spec_helper'
+zrequire 'spec_helper'
 
 describe Shrouded::Model::Data do
   let(:hash)          { '8843d7f92416211de9ebb963ff4ce28125932878' }
@@ -18,7 +18,7 @@ describe Shrouded::Model::Data do
     Shrouded::Storage.layers.clear!
   end
 
-  describe ".any?" do
+  describe "#any?" do
     subject(:result) { data.any? }
 
     context "with no data" do
@@ -35,7 +35,7 @@ describe Shrouded::Model::Data do
     end
   end
 
-  describe ".read" do
+  describe "#read" do
     subject(:result) { data.read }
 
     context "with no data" do
@@ -63,7 +63,7 @@ describe Shrouded::Model::Data do
     end
   end
 
-  describe ".changed?" do
+  describe "#changed?" do
     subject(:result) { data.changed? }
 
     context "with no data set" do
@@ -76,7 +76,7 @@ describe Shrouded::Model::Data do
     end
   end
 
-  describe ".content_length" do
+  describe "#content_length" do
     subject(:result) { data.content_length }
 
     context "with no data" do
@@ -104,7 +104,7 @@ describe Shrouded::Model::Data do
     end
   end
 
-  describe ".expire" do
+  describe "#expire" do
     context "when data is in use by other records" do
       before { Image.create(data: uploaded_file, accept: true) }
       it "should not delete the data" do
@@ -121,7 +121,7 @@ describe Shrouded::Model::Data do
     end
   end
 
-  describe ".store!" do
+  describe "#store!" do
     context "with no data" do
       it "should raise an error" do
         expect { data.store! }.to raise_error(Shrouded::Errors::NoDataError)

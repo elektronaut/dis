@@ -13,7 +13,7 @@ describe Shrouded::Layer do
 
   after { FileUtils.rm_rf(root_path) if File.exists?(root_path) }
 
-  describe ".delayed?" do
+  describe "#delayed?" do
     subject { layer.delayed? }
 
     context "when the layer is delayed" do
@@ -27,7 +27,7 @@ describe Shrouded::Layer do
     end
   end
 
-  describe ".immediate?" do
+  describe "#immediate?" do
     subject { layer.immediate? }
 
     context "when the layer is delayed" do
@@ -41,7 +41,7 @@ describe Shrouded::Layer do
     end
   end
 
-  describe ".public?" do
+  describe "#public?" do
     subject { layer.public? }
 
     context "when the layer is public" do
@@ -55,7 +55,7 @@ describe Shrouded::Layer do
     end
   end
 
-  describe ".readonly?" do
+  describe "#readonly?" do
     subject { layer.readonly? }
 
     context "when the layer is readonly" do
@@ -69,7 +69,7 @@ describe Shrouded::Layer do
     end
   end
 
-  describe ".writeable?" do
+  describe "#writeable?" do
     subject { layer.writeable? }
 
     context "when the layer is readonly" do
@@ -83,7 +83,7 @@ describe Shrouded::Layer do
     end
   end
 
-  describe ".get" do
+  describe "#get" do
     let(:result) { layer.get(type, hash) }
 
     context "when the file exists" do
@@ -109,7 +109,7 @@ describe Shrouded::Layer do
     end
   end
 
-  describe ".exists?" do
+  describe "#exists?" do
     subject { layer.exists?(type, hash) }
 
     context "when the file exists" do
@@ -122,7 +122,7 @@ describe Shrouded::Layer do
     end
   end
 
-  describe ".store" do
+  describe "#store" do
     let(:result) { layer.store(type, hash, file) }
 
     context "with a file" do
@@ -173,7 +173,7 @@ describe Shrouded::Layer do
     end
   end
 
-  describe ".delete" do
+  describe "#delete" do
     let(:result) { layer.delete(type, hash) }
 
     context "when the file exists" do

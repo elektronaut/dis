@@ -9,7 +9,7 @@ describe Shrouded::Layers do
   let(:readonly_layer) { Shrouded::Layer.new(connection, readonly: true) }
   let(:layers)         { Shrouded::Layers.new }
 
-  describe ".clear!" do
+  describe "#clear!" do
     before { layers << layer }
 
     it "clears the layers" do
@@ -19,7 +19,7 @@ describe Shrouded::Layers do
     end
   end
 
-  describe ".delayed" do
+  describe "#delayed" do
     before do
       layers << layer
       layers << delayed_layer
@@ -35,7 +35,7 @@ describe Shrouded::Layers do
     end
   end
 
-  describe ".delayed?" do
+  describe "#delayed?" do
     subject { layers.delayed? }
     context "with no layers" do
       it { should be false }
@@ -52,7 +52,7 @@ describe Shrouded::Layers do
     end
   end
 
-  describe ".immediate" do
+  describe "#immediate" do
     before do
       layers << layer
       layers << delayed_layer
@@ -68,7 +68,7 @@ describe Shrouded::Layers do
     end
   end
 
-  describe ".immediate?" do
+  describe "#immediate?" do
     subject { layers.immediate? }
     context "with no layers" do
       it { should be false }
@@ -85,7 +85,7 @@ describe Shrouded::Layers do
     end
   end
 
-  describe ".readonly" do
+  describe "#readonly" do
     before do
       layers << layer
       layers << readonly_layer
@@ -101,7 +101,7 @@ describe Shrouded::Layers do
     end
   end
 
-  describe ".readonly?" do
+  describe "#readonly?" do
     subject { layers.readonly? }
     context "with no layers" do
       it { should be false }
@@ -118,7 +118,7 @@ describe Shrouded::Layers do
     end
   end
 
-  describe ".writeable" do
+  describe "#writeable" do
     before do
       layers << layer
       layers << readonly_layer
@@ -134,7 +134,7 @@ describe Shrouded::Layers do
     end
   end
 
-  describe ".writeable?" do
+  describe "#writeable?" do
     subject { layers.writeable? }
     context "with no layers" do
       it { should be false }

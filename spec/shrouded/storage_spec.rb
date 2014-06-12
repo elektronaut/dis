@@ -25,13 +25,13 @@ describe Shrouded::Storage do
     Shrouded::Storage.layers.clear!
   end
 
-  describe "#layers" do
+  describe ".layers" do
     it "should be an instance of Shrouded::Layers" do
       expect(Shrouded::Storage.layers).to be_a(Shrouded::Layers)
     end
   end
 
-  describe "#store" do
+  describe ".store" do
     context "with no immediately writeable layers" do
       before do
         Shrouded::Storage.layers << delayed_layer
@@ -90,7 +90,7 @@ describe Shrouded::Storage do
     end
   end
 
-  describe "#delayed_store" do
+  describe ".delayed_store" do
     before { all_layers.each { |layer| Shrouded::Storage.layers << layer } }
 
     context "when the file doesn't exist" do
@@ -117,7 +117,7 @@ describe Shrouded::Storage do
     end
   end
 
-  describe "#exists?" do
+  describe ".exists?" do
     context "with no layers" do
       it "should raise an error" do
         expect { Shrouded::Storage.exists?(type, hash) }.to raise_error(Shrouded::Errors::NoLayersError)
@@ -142,7 +142,7 @@ describe Shrouded::Storage do
     end
   end
 
-  describe "#get" do
+  describe ".get" do
     context "with no layers" do
       it "should raise a NoLayersError" do
         expect { Shrouded::Storage.get(type, hash) }.to raise_error(Shrouded::Errors::NoLayersError)
@@ -191,7 +191,7 @@ describe Shrouded::Storage do
     end
   end
 
-  describe "#delete" do
+  describe ".delete" do
     context "with no immediately writeable layers" do
       before do
         Shrouded::Storage.layers << delayed_layer
@@ -244,7 +244,7 @@ describe Shrouded::Storage do
     end
   end
 
-  describe "#delayed_delete" do
+  describe ".delayed_delete" do
     before do
       all_layers.each do |layer|
         Shrouded::Storage.layers << layer

@@ -26,7 +26,7 @@ describe Shrouded::Model do
     Shrouded::Storage.layers.clear!
   end
 
-  describe "#shrouded_attributes" do
+  describe ".shrouded_attributes" do
     subject(:attributes) { model.shrouded_attributes }
 
     context "with no attributes specified" do
@@ -54,7 +54,7 @@ describe Shrouded::Model do
     end
   end
 
-  describe "#shrouded_type" do
+  describe ".shrouded_type" do
     subject(:type) { model.shrouded_type }
 
     context "with no attributes specified" do
@@ -72,7 +72,7 @@ describe Shrouded::Model do
     end
   end
 
-  describe ".data" do
+  describe "#data" do
     context "when loading from the store" do
       let(:existing_image) { Image.create(data: uploaded_file, accept: true) }
       let(:image) { Image.find(existing_image.id) }
@@ -96,7 +96,7 @@ describe Shrouded::Model do
     end
   end
 
-  describe ".data=" do
+  describe "#data=" do
     let(:image) { Image.new }
     before { image.data = uploaded_file }
 
@@ -117,7 +117,7 @@ describe Shrouded::Model do
     end
   end
 
-  describe ".data?" do
+  describe "#data?" do
     let(:image) { Image.new }
     subject(:result) { image.data? }
 
@@ -152,7 +152,7 @@ describe Shrouded::Model do
     end
   end
 
-  describe ".file=" do
+  describe "#file=" do
     let(:image) { Image.new }
 
     context "with an uploaded file" do
