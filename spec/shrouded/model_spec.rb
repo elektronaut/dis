@@ -87,22 +87,8 @@ describe Shrouded::Model do
       end
     end
 
-    context "when data is an uploaded file" do
+    context "when data is set" do
       let(:image) { Image.new(data: uploaded_file) }
-      it "should return the content" do
-        expect(image.data).to eq("foobar")
-      end
-    end
-
-    context "when data is a file" do
-      let(:image) { Image.new(data: file) }
-      it "should return the content" do
-        expect(image.data).to eq("foobar")
-      end
-    end
-
-    context "when data is a string" do
-      let(:image) { Image.new(data: "foobar") }
       it "should return the content" do
         expect(image.data).to eq("foobar")
       end
