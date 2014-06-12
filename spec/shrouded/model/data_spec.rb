@@ -1,4 +1,4 @@
-zrequire 'spec_helper'
+require 'spec_helper'
 
 describe Shrouded::Model::Data do
   let(:hash)          { '8843d7f92416211de9ebb963ff4ce28125932878' }
