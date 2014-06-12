@@ -6,5 +6,6 @@ module Shrouded
     class ReadOnlyError < Shrouded::Errors::Error; end
     class NoLayersError < Shrouded::Errors::Error; end
     class NotFoundError < Shrouded::Errors::Error; end
+    class NoDataError < Shrouded::Errors::Error; end
   end
 end

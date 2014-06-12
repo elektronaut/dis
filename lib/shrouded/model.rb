@@ -12,7 +12,7 @@ module Shrouded
     end
 
     def data
-      shrouded_data.cached
+      shrouded_data.read
     end
 
     def data?

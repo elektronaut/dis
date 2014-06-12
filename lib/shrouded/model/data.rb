@@ -10,7 +10,7 @@ module Shrouded
         raw? || stored?
       end
 
-      def cached
+      def read
         @cached ||= read_from(closest)
       end
 
@@ -22,7 +22,7 @@ module Shrouded
         if raw? && raw.respond_to?(:length)
           raw.length
         else
-          cached.try(&:length).to_i
+          read.try(&:length).to_i
         end
       end
 
@@ -35,6 +35,7 @@ module Shrouded
       end
 
       def store!
+        raise Shrouded::Errors::NoDataError unless raw?
         Shrouded::Storage.store(storage_type, raw)
       end
 
