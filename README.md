@@ -35,7 +35,43 @@ gem "shrouded"
 
 ## Usage
 
-_TODO_
+When the generator has been implemented, you will be able to do:
+
+```sh
+rails generate shrouded:model Document
+```
+
+This will create a model along with a migration. Note that Shrouded does
+not validate any data, you are expected to use the Rails validators.
+
+Here's what your model might look like:
+
+```ruby
+class Document < ActiveRecord::Base
+  shrouded_model
+  validates :data, presence: true
+  validates :content_type, presence: true, format: /\Aapplication\/(x\-)?pdf\z/
+  validates :filename, presence: true, format: /\A[\w_\-\.]+\.pdf\z/i
+  validates :content_length, numericality: { less_than: 5.megabytes }
+end
+```
+
+To save your document, simply set the `file` attribute.
+
+```ruby
+document_params = params.require(:document).permit(:file)
+@document = Document.create(file: document_params)
+```
+
+You can also assign the data directly.
+
+```ruby
+Document.create(
+  data:         File.open('document.pdf'),
+  content_type: 'application/pdf',
+  filename:     'document.pdf'
+)
+```
 
 ## Defining layers
 
