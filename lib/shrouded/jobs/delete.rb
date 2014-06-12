@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module Shrouded
   module Jobs
     class Delete < ActiveJob::Base

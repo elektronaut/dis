@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 class Image < ActiveRecord::Base
   include Shrouded::Model
   attr_accessor :accept
