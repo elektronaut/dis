@@ -65,7 +65,9 @@ module Shrouded
           object.body
         elsif object.respond_to?(:read)
           object.rewind
-          object.read
+          response = object.read
+          object.rewind
+          response
         else
           object
         end
