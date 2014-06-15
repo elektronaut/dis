@@ -8,6 +8,12 @@ module Shrouded
         @raw = raw
       end
 
+      def ==(comp)
+        # TODO: This can be made faster by
+        # comparing hashes for stored objects.
+        comp.read == read
+      end
+
       def any?
         raw? || stored?
       end

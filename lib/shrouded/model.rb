@@ -22,9 +22,15 @@ module Shrouded
     end
 
     def data=(new_data)
-      @shrouded_data = Shrouded::Model::Data.new(self, new_data)
+      new_data = Shrouded::Model::Data.new(self, new_data)
+      attribute_will_change!('data') unless new_data == shrouded_data
+      @shrouded_data = new_data
       shrouded_set :content_hash, nil
       shrouded_set :content_length, shrouded_data.content_length
+    end
+
+    def data_changed?
+      changes.include?('data')
     end
 
     def file=(file)

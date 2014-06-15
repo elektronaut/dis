@@ -66,6 +66,35 @@ describe Shrouded::Model do
     end
   end
 
+  describe "#data_changed?" do
+    let(:image) { Image.new }
+    subject { image.data_changed? }
+
+    context "with no changes" do
+      it { is_expected.to be false }
+    end
+
+    context "when attribute is being set" do
+      let(:image) { Image.new(data: uploaded_file) }
+      it { is_expected.to be true }
+    end
+
+    context "when the object has been persisted" do
+      let(:existing_image) { Image.create(file: uploaded_file, accept: true) }
+      let(:image) { Image.find(existing_image.id) }
+
+      context "and the data is the same" do
+        before { image.data = uploaded_file }
+        it { is_expected.to be false }
+      end
+
+      context "and the data changes" do
+        before { image.data = "new" }
+        it { is_expected.to be true }
+      end
+    end
+  end
+
   describe "#data?" do
     let(:image) { Image.new }
     subject(:result) { image.data? }

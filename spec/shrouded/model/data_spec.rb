@@ -3,20 +3,23 @@
 require 'spec_helper'
 
 describe Shrouded::Model::Data do
+  root_path = Rails.root.join('tmp', 'spec')
+
   let(:hash)          { '8843d7f92416211de9ebb963ff4ce28125932878' }
-  let(:root_path)     { Rails.root.join('tmp', 'spec') }
   let(:file)          { File.open(File.expand_path("../../../support/fixtures/file.txt", __FILE__)) }
   let(:uploaded_file) { Rack::Test::UploadedFile.new(file, 'text/plain') }
-  let(:layer)         { Shrouded::Layer.new(Fog::Storage.new({provider: 'Local', local_root: root_path})) }
   let(:image)         { Image.new }
   let(:data)          { Shrouded::Model::Data.new(image) }
 
-  before do
-    Shrouded::Storage.layers << layer
+  before(:all) do
+    Shrouded::Storage.layers << Shrouded::Layer.new(Fog::Storage.new({provider: 'Local', local_root: root_path}))
   end
 
   after do
     FileUtils.rm_rf(root_path) if File.exists?(root_path)
+  end
+
+  after(:all) do
     Shrouded::Storage.layers.clear!
   end
 
@@ -45,13 +48,14 @@ describe Shrouded::Model::Data do
     end
 
     context "with stored data" do
-      let(:image) { Image.create(data: uploaded_file, accept: true) }
-      it { should eq("foobar") }
+      let(:existing_image) { Image.create(data: uploaded_file, accept: true) }
+      let(:image) { Image.find(existing_image.id) }
+      it { is_expected.to eq("foobar") }
     end
 
     context "with a string" do
       let(:data) { Shrouded::Model::Data.new(image, "test") }
-      it { should eq("test") }
+      it { is_expected.to eq("test") }
     end
 
     context "with a File" do
