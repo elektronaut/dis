@@ -19,6 +19,10 @@ module Shrouded
         @shrouded_type = new_type
       end
 
+      def validates_data_presence
+        validates_with Shrouded::Validations::DataPresence
+      end
+
       def default_shrouded_attributes
         {
           content_hash: :content_hash,

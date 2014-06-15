@@ -10,6 +10,7 @@ require "shrouded/layer"
 require "shrouded/layers"
 require "shrouded/model"
 require "shrouded/storage"
+require "shrouded/validations"
 
 module Shrouded
 end

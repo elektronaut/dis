@@ -43,13 +43,14 @@ rails generate shrouded:model Document
 
 This will create a model along with a migration.
 
-Here's what your model might look like. Note that Shrouded does
-not validate any data, you are expected to use the Rails validators.
+Here's what your model might look like. Note that Shrouded does not
+validate any data by default, you are expected to use the Rails validators.
+A validator for validating presence of data is provided.
 
 ```ruby
 class Document < ActiveRecord::Base
   include Shrouded::Model
-  validates :data, presence: true
+  validates_data_presence
   validates :content_type, presence: true, format: /\Aapplication\/(x\-)?pdf\z/
   validates :filename, presence: true, format: /\A[\w_\-\.]+\.pdf\z/i
   validates :content_length, numericality: { less_than: 5.megabytes }
