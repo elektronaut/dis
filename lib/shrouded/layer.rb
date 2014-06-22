@@ -61,11 +61,11 @@ module Shrouded
     end
 
     def directory_component(type, hash)
-      [path, type, hash[0...2]].compact.join('/')
+      path || ""
     end
 
     def key_component(type, hash)
-      hash[2..hash.length]
+      [type, hash[0...2], hash[2..hash.length]].compact.join('/')
     end
 
     def delete!(type, hash)

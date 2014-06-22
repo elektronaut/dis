@@ -103,14 +103,16 @@ whatever adapter you've configured
 Note: You must have at least one non-delayed layer.
 
 ```ruby
-aws_store = Fog::Storage.new({
-  provider:              'AWS',
-  aws_access_key_id:     YOUR_AWS_ACCESS_KEY_ID,
-  aws_secret_access_key: YOUR_AWS_SECRET_ACCESS_KEY
-})
-
 if Rails.env.production?
-  Shrouded::Storage.layers << Shrouded::Layer.new(aws_store, delayed: true)
+  Shrouded::Storage.layers << Shrouded::Layer.new(
+    Fog::Storage.new({
+      provider:              'AWS',
+      aws_access_key_id:     YOUR_AWS_ACCESS_KEY_ID,
+      aws_secret_access_key: YOUR_AWS_SECRET_ACCESS_KEY
+    }),
+    path: "my_bucket",
+    delayed: true
+  )
 end
 ```
 
@@ -120,7 +122,10 @@ are in the process of migration from one provider to another.
 
 ```ruby
 if Rails.env.development?
-  Shrouded::Storage.layers << Shrouded::Layer.new(aws_store, readonly: true)
+  Shrouded::Storage.layers << Shrouded::Layer.new(
+    Fog::Storage.new(...),
+    readonly: true
+  )
 end
 ```
 
