@@ -35,7 +35,7 @@ gem "shrouded"
 
 ## Usage
 
-When the generator has been implemented, you will be able to do:
+Run the generator to create your model.
 
 ```sh
 rails generate shrouded:model Document
