@@ -44,7 +44,7 @@ bin/rails generate shrouded:install
 Run the generator to create your model.
 
 ```sh
-rails generate shrouded:model Document
+bin/rails generate shrouded:model Document
 ```
 
 This will create a model along with a migration.
