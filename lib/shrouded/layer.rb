@@ -88,6 +88,7 @@ module Shrouded
 
     def store!(type, hash, file)
       return get(type, hash) if exists?(type, hash)
+      file.rewind if file.respond_to?(:rewind)
       directory!(type, hash).files.create(
         key:    key_component(type, hash),
         body:   (file.kind_of?(Fog::Model) ? file.body : file),
