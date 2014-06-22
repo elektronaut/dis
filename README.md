@@ -27,10 +27,16 @@ Requires Rails 4.1+ and Ruby 1.9.3+.
 
 ## Installation
 
-You know this:
+Add the gem to your Gemfile and run `bundle install`:
 
 ```ruby
 gem "shrouded"
+```
+
+Now, run the generator to install the initializer:
+
+```sh
+bin/rails generate shrouded:install
 ```
 
 ## Usage
@@ -76,7 +82,9 @@ Document.create(
 
 ## Defining layers
 
-You'll want to configure your storage layers in an initializer.
+The install generator will set you up with a local storage layer on disk,
+but this is configurable in `config/initializers/shrouded.rb`.
+
 You can have as many layers as you want, any storage provider
 [supported by Fog](http://fog.io/storage/) should work in theory.
 Having a local layer first is a good idea, this will provide you

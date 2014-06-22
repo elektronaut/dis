@@ -6,6 +6,7 @@ require 'rails/generators/rails/model/model_generator'
 module Shrouded
   module Generators
     class ModelGenerator < Rails::Generators::ModelGenerator
+      desc "Creates a Shrouded model"
 
       def initialize(args, *options)
         super(inject_shrouded_attributes(args), *options)
