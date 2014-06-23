@@ -4,6 +4,81 @@ require 'shrouded/model/class_methods'
 require 'shrouded/model/data'
 
 module Shrouded
+  # = Shrouded Model
+  #
+  # ActiveModel extension for the model holding your data. To use it,
+  # simply include the module in your model:
+  #
+  #   class Document < ActiveRecord::Base
+  #     include Shrouded::Model
+  #   end
+  #
+  # You'll need to define a few attributes in your database table.
+  # Here's a minimal migration:
+  #
+  #   create_table :documents do |t|
+  #     t.string  :content_hash
+  #     t.string  :content_type
+  #     t.integer :content_length
+  #     t.string  :filename
+  #   end
+  #
+  # You can override the names of any of these by setting
+  # <tt>shrouded_attributes</tt>.
+  #
+  #   class Document < ActiveRecord::Base
+  #     include Shrouded::Model
+  #     self.shrouded_attributes = {
+  #       filename:       :my_filename,
+  #       content_length: :filesize
+  #     }
+  #   end
+  #
+  # == Usage
+  #
+  # To save a file, simply assign to the <tt>file</tt> attribute.
+  #
+  #   document = Document.create(file: params.permit(:file))
+  #
+  # <tt>content_type</tt> and <tt>filename</tt> will automatically be set if
+  # the supplied object quacks like a file. <tt>content_length</tt> will always
+  # be set. <tt>content_hash</tt> won't be set until the record is being saved.
+  #
+  # If you don't care about filenames and content types and just want to store
+  # a binary blob, you can also just set the <tt>data</tt> attribute.
+  #
+  #   my_data = File.read('document.pdf')
+  #   document.update(data: my_data)
+  #
+  # The data won't be stored until the record is saved, and not unless
+  # the record is valid.
+  #
+  # To retrieve your data, simply read the <tt>data</tt> attribute. The file
+  # will be lazily loaded from the store on demand and cached in memory as long
+  # as the record stays in scope.
+  #
+  #   my_data = document.data
+  #
+  # Destroying a record will delete the file from the store, unless another
+  # record also refers to the same hash. Similarly, stale files will be purged
+  # when content changes.
+  #
+  # == Validations
+  #
+  # No validation is performed by default. If you want to ensure that data is
+  # present, use the <tt>validates_data_presence</tt> method.
+  #
+  #   class Document < ActiveRecord::Base
+  #     include Shrouded::Model
+  #     validates_data_presence
+  #   end
+  #
+  # If you want to validate content types, size or similar, simply use standard
+  # Rails validations on the metadata attributes:
+  #
+  #   validates :content_type, presence: true, format: /\Aapplication\/(x\-)?pdf\z/
+  #   validates :filename, presence: true, format: /\A[\w_\-\.]+\.pdf\z/i
+  #   validates :content_length, numericality: { less_than: 5.megabytes }
   module Model
     extend ActiveSupport::Concern
 
@@ -13,14 +88,18 @@ module Shrouded
       after_destroy :delete_data
     end
 
+    # Returns the data as a binary string, or nil if no data has been set.
     def data
       shrouded_data.read
     end
 
+    # Returns true if data is set.
     def data?
       shrouded_data.any?
     end
 
+    # Assigns new data. This also sets <tt>content_length</tt>, and resets
+    # <tt>content_hash</tt> to nil.
     def data=(new_data)
       new_data = Shrouded::Model::Data.new(self, new_data)
       attribute_will_change!('data') unless new_data == shrouded_data
@@ -29,10 +108,14 @@ module Shrouded
       shrouded_set :content_length, shrouded_data.content_length
     end
 
+    # Returns true if the data has been changed since the object was last saved.
     def data_changed?
       changes.include?('data')
     end
 
+    # Assigns new data from an uploaded file. In addition to the actions
+    # performed by <tt>data=</tt>, this will set <tt>content_type</tt> and
+    # <tt>filename</tt>.
     def file=(file)
       self.data = file
       shrouded_set :content_type, file.content_type

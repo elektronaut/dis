@@ -2,6 +2,11 @@
 
 module Shrouded
   module Jobs
+    # = Shrouded Delete Job
+    #
+    # Handles delayed deletion of objects.
+    #
+    #   Shrouded::Jobs::Delete.enqueue("documents", hash)
     class Delete < ActiveJob::Base
       queue_as :shrouded
 

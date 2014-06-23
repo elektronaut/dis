@@ -1,7 +1,5 @@
 # Shrouded [![Build Status](https://travis-ci.org/elektronaut/shrouded.png)](https://travis-ci.org/elektronaut/shrouded) [![Code Climate](https://codeclimate.com/github/elektronaut/shrouded.png)](https://codeclimate.com/github/elektronaut/shrouded) [![Code Climate](https://codeclimate.com/github/elektronaut/shrouded/coverage.png)](https://codeclimate.com/github/elektronaut/shrouded)
 
-**Warning:** Work in progress, the API is subject to change.
-
 Shrouded handles file uploads for your Rails app.
 It's similar to [Paperclip](https://github.com/thoughtbot/paperclip)
 and [Carrierwave](https://github.com/carrierwaveuploader/carrierwave),
@@ -19,11 +17,13 @@ a file with changed content is by definition a different file.
 
 It does not do any processing. The idea is to provide a simple foundation
 other gems can build on. If you are looking to handle uploaded images,
-the next version of
-[DynamicImage](https://github.com/elektronaut/dynamic_image)
-will be built on top of Shrouded.
+check out [DynamicImage](https://github.com/elektronaut/dynamic_image).
 
 Requires Rails 4.1+ and Ruby 1.9.3+.
+
+## Documentation
+
+[Documentation on RubyDoc.info](http://rdoc.info/github/elektronaut/shrouded)
 
 ## Installation
 
