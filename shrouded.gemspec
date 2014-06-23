@@ -12,11 +12,11 @@ Gem::Specification.new do |s|
   s.authors     = ["Inge Jørgensen"]
   s.email       = ["inge@elektronaut.no"]
   s.homepage    = "https://github.com/elektronaut/shrouded"
-  s.summary     = "Rails engine that stores your data blobs."
-  s.description = "Shrouded is a Rails engine that takes your uploaded files, de-duplicates them and stores them in layers."
+  s.summary     = "A file store for your Rails app"
+  s.description = "Shrouded is a Rails plugin that stores your file uploads and other binary blobs."
   s.license     = "MIT"
 
-  s.files = Dir["{app,config,db,lib,spec}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
+  s.files = Dir["{lib}/**/*", "MIT-LICENSE", "README.md"]
 
   s.required_ruby_version = '>= 1.9.2'
 
