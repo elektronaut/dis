@@ -1,6 +1,6 @@
 addons:
   code_climate:
-    repo_token: 2ca4e788599abc7ca7d36e947c799a36a32a2f145fc584c5f0136f6afdeefbc5
+    repo_token: 75d1da76d5a205a703da8a9c13c7147bec4bd765dbb1195d85664f424b51cbf1
 language: ruby
 rvm:
   - 1.9.3
