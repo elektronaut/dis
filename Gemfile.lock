@@ -197,11 +197,11 @@ PLATFORMS
 DEPENDENCIES
   activemodel-globalid!
   codeclimate-test-reporter
+  dis!
   guard
   guard-rspec
   pry
   pry-rescue
   pry-stack_explorer
   rspec-rails (~> 3.0.0)
-  dis!
   sqlite3
