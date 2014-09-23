@@ -9,7 +9,7 @@ GIT
 PATH
   remote: .
   specs:
-    shrouded (0.9.0)
+    dis (0.9.0)
       activejob
       fog (~> 1.22.1)
       rails (~> 4.1.0)
@@ -203,5 +203,5 @@ DEPENDENCIES
   pry-rescue
   pry-stack_explorer
   rspec-rails (~> 3.0.0)
-  shrouded!
+  dis!
   sqlite3

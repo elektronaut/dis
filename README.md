@@ -1,6 +1,6 @@
-# Shrouded [![Build Status](https://travis-ci.org/elektronaut/shrouded.png)](https://travis-ci.org/elektronaut/shrouded) [![Code Climate](https://codeclimate.com/github/elektronaut/shrouded.png)](https://codeclimate.com/github/elektronaut/shrouded) [![Code Climate](https://codeclimate.com/github/elektronaut/shrouded/coverage.png)](https://codeclimate.com/github/elektronaut/shrouded)
+# Dis [![Build Status](https://travis-ci.org/elektronaut/dis.png)](https://travis-ci.org/elektronaut/dis) [![Code Climate](https://codeclimate.com/github/elektronaut/dis.png)](https://codeclimate.com/github/elektronaut/dis) [![Code Climate](https://codeclimate.com/github/elektronaut/dis/coverage.png)](https://codeclimate.com/github/elektronaut/dis)
 
-Shrouded handles file uploads for your Rails app.
+Dis handles file uploads for your Rails app.
 It's similar to [Paperclip](https://github.com/thoughtbot/paperclip)
 and [Carrierwave](https://github.com/carrierwaveuploader/carrierwave),
 but different in a few ways. Chiefly, it's much, much simpler.
@@ -23,20 +23,20 @@ Requires Rails 4.1+ and Ruby 1.9.3+.
 
 ## Documentation
 
-[Documentation on RubyDoc.info](http://rdoc.info/github/elektronaut/shrouded)
+[Documentation on RubyDoc.info](http://rdoc.info/github/elektronaut/dis)
 
 ## Installation
 
 Add the gem to your Gemfile and run `bundle install`:
 
 ```ruby
-gem "shrouded"
+gem "dis"
 ```
 
 Now, run the generator to install the initializer:
 
 ```sh
-bin/rails generate shrouded:install
+bin/rails generate dis:install
 ```
 
 ## Usage
@@ -44,18 +44,18 @@ bin/rails generate shrouded:install
 Run the generator to create your model.
 
 ```sh
-bin/rails generate shrouded:model Document
+bin/rails generate dis:model Document
 ```
 
 This will create a model along with a migration.
 
-Here's what your model might look like. Note that Shrouded does not
+Here's what your model might look like. Note that Dis does not
 validate any data by default, you are expected to use the Rails validators.
 A validator for validating presence of data is provided.
 
 ```ruby
 class Document < ActiveRecord::Base
-  include Shrouded::Model
+  include Dis::Model
   validates_data_presence
   validates :content_type, presence: true, format: /\Aapplication\/(x\-)?pdf\z/
   validates :filename, presence: true, format: /\A[\w_\-\.]+\.pdf\z/i
@@ -83,7 +83,7 @@ Document.create(
 ## Defining layers
 
 The install generator will set you up with a local storage layer on disk,
-but this is configurable in `config/initializers/shrouded.rb`.
+but this is configurable in `config/initializers/dis.rb`.
 
 You can have as many layers as you want, any storage provider
 [supported by Fog](http://fog.io/storage/) should work in theory.
@@ -91,7 +91,7 @@ Having a local layer first is a good idea, this will provide you
 with a cache on disk. Any misses will be filled from the next layer.
 
 ```ruby
-Shrouded::Storage.layers << Shrouded::Layer.new(
+Dis::Storage.layers << Dis::Layer.new(
   Fog::Storage.new({provider: 'Local', local_root: Rails.root.join('db', 'binaries')}),
   path: Rails.env
 )
@@ -104,7 +104,7 @@ Note: You must have at least one non-delayed layer.
 
 ```ruby
 if Rails.env.production?
-  Shrouded::Storage.layers << Shrouded::Layer.new(
+  Dis::Storage.layers << Dis::Layer.new(
     Fog::Storage.new({
       provider:              'AWS',
       aws_access_key_id:     YOUR_AWS_ACCESS_KEY_ID,
@@ -122,7 +122,7 @@ are in the process of migration from one provider to another.
 
 ```ruby
 if Rails.env.development?
-  Shrouded::Storage.layers << Shrouded::Layer.new(
+  Dis::Storage.layers << Dis::Layer.new(
     Fog::Storage.new(...),
     readonly: true
   )
@@ -135,10 +135,10 @@ You can interact directly with the store if you want.
 
 ```ruby
 file = File.open("foo.txt")
-hash = Shrouded::Storage.store("stuff", file) # => "8843d7f92416211de9ebb963ff4ce28125932878"
-Shrouded::Storage.exists?("stuff", hash)      # => true
-Shrouded::Storage.get("stuff", hash).body     # => "foobar"
-Shrouded::Storage.delete("stuff", hash)       # => true
+hash = Dis::Storage.store("stuff", file) # => "8843d7f92416211de9ebb963ff4ce28125932878"
+Dis::Storage.exists?("stuff", hash)      # => true
+Dis::Storage.get("stuff", hash).body     # => "foobar"
+Dis::Storage.delete("stuff", hash)       # => true
 ```
 
 ## License
