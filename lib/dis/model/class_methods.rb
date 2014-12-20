@@ -5,7 +5,7 @@ module Dis
     module ClassMethods
       # Returns the mapping of attribute names.
       def dis_attributes
-        default_dis_attributes.merge(@dis_attributes || {})
+        default_dis_attributes.merge(@dis_attributes ||= {})
       end
 
       # Sets the current mapping of attribute names. Use this if you want to
@@ -25,7 +25,7 @@ module Dis
       #   class Document < ActiveRecord::Base; end
       #   Document.dis_type # => "documents"
       def dis_type
-        @dis_type || self.table_name
+        @dis_type ||= self.table_name
       end
 
       # Sets the storage type name.

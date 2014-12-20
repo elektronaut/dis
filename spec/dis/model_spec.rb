@@ -17,7 +17,7 @@ describe Dis::Model do
   end
 
   after do
-    FileUtils.rm_rf(root_path) if File.exists?(root_path)
+    FileUtils.rm_rf(root_path) if File.exist?(root_path)
     Dis::Storage.layers.clear!
   end
 

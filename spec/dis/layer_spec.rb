@@ -11,7 +11,7 @@ describe Dis::Layer do
   let(:connection)  { Fog::Storage.new({provider: 'Local', local_root: root_path}) }
   let(:layer)       { Dis::Layer.new(connection) }
 
-  after { FileUtils.rm_rf(root_path) if File.exists?(root_path) }
+  after { FileUtils.rm_rf(root_path) if File.exist?(root_path) }
 
   describe "#delayed?" do
     subject { layer.delayed? }
@@ -129,11 +129,11 @@ describe Dis::Layer do
       before { result }
 
       it "creates the directory" do
-        expect(File.exists?(root_path)).to be true
+        expect(File.exist?(root_path)).to be true
       end
 
       it "stores the file" do
-        expect(File.exists?(target_path)).to be true
+        expect(File.exist?(target_path)).to be true
         expect(File.read(target_path)).to eq("foobar")
       end
     end
@@ -148,11 +148,11 @@ describe Dis::Layer do
       end
 
       it "creates the directory" do
-        expect(File.exists?(root_path)).to be true
+        expect(File.exist?(root_path)).to be true
       end
 
       it "stores the file" do
-        expect(File.exists?(target_path)).to be true
+        expect(File.exist?(target_path)).to be true
         expect(File.read(target_path)).to eq("foobar")
       end
     end
@@ -185,7 +185,7 @@ describe Dis::Layer do
       end
 
       it "deletes the file" do
-        expect(File.exists?(target_path)).to be false
+        expect(File.exist?(target_path)).to be false
       end
     end
 
