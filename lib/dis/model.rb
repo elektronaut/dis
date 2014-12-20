@@ -155,5 +155,10 @@ module Dis
     def dis_attribute(attribute_name)
       self.class.dis_attributes[attribute_name]
     end
+
+    # We don't want the data column when doing a partial write.
+    def keys_for_partial_write
+      super.reject { |a| a == "data" }
+    end
   end
 end
