@@ -19,7 +19,7 @@ It does not do any processing. The idea is to provide a simple foundation
 other gems can build on. If you are looking to handle uploaded images,
 check out [DynamicImage](https://github.com/elektronaut/dynamic_image).
 
-Requires Rails 4.1+ and Ruby 1.9.3+.
+Requires Rails 4.2+ and Ruby 1.9.3+.
 
 ## Documentation
 
