@@ -1,7 +1,8 @@
 # encoding: utf-8
 
 require "digest/sha1"
-require "fog"
+require "fog/core"
+require "fog/local/storage"
 require "active_job"
 require "dis/errors"
 require "dis/jobs"

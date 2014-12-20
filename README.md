@@ -86,7 +86,13 @@ The install generator will set you up with a local storage layer on disk,
 but this is configurable in `config/initializers/dis.rb`.
 
 You can have as many layers as you want, any storage provider
-[supported by Fog](http://fog.io/storage/) should work in theory.
+[supported by Fog](http://fog.io/storage/) should work in theory. Only the
+local storage is loaded by default, you'll have to manually require your provider.
+
+```ruby
+require 'fog/aws/storage'
+```
+
 Having a local layer first is a good idea, this will provide you
 with a cache on disk. Any misses will be filled from the next layer.
 
