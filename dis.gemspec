@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 1.9.2'
 
   s.add_dependency "rails", "~> 4.2.0"
-  s.add_dependency "fog", "~> 1.22.1"
+  s.add_dependency "fog", "~> 1.26.0"
 
   s.add_development_dependency "sqlite3"
   s.add_development_dependency "rspec-rails", "~> 3.0.0"
