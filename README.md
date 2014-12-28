@@ -23,7 +23,7 @@ Requires Rails 4.2+ and Ruby 1.9.3+.
 
 ## Documentation
 
-[Documentation on RubyDoc.info](http://rdoc.info/github/elektronaut/dis)
+[Documentation on RubyDoc.info](http://rdoc.info/gems/dis)
 
 ## Installation
 
