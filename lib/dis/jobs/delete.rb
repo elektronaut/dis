@@ -6,7 +6,7 @@ module Dis
     #
     # Handles delayed deletion of objects.
     #
-    #   Dis::Jobs::Delete.enqueue("documents", hash)
+    #   Dis::Jobs::Delete.perform_later("documents", hash)
     class Delete < ActiveJob::Base
       queue_as :dis
 

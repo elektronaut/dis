@@ -6,7 +6,7 @@ module Dis
     #
     # Handles delayed storage of objects.
     #
-    #   Dis::Jobs::Store.enqueue("documents", hash)
+    #   Dis::Jobs::Store.perform_later("documents", hash)
     class Store < ActiveJob::Base
       queue_as :dis
 

@@ -32,7 +32,7 @@ module Dis
         require_writeable_layers!
         hash = store_immediately!(type, file)
         if layers.delayed.writeable.any?
-          Dis::Jobs::Store.enqueue(type, hash)
+          Dis::Jobs::Store.perform_later(type, hash)
         end
         hash
       end
@@ -96,7 +96,7 @@ module Dis
           deleted = true if layer.delete(type, hash)
         end
         if layers.delayed.writeable.any?
-          Dis::Jobs::Delete.enqueue(type, hash)
+          Dis::Jobs::Delete.perform_later(type, hash)
         end
         deleted
       end

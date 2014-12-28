@@ -16,8 +16,8 @@ describe Dis::Storage do
   let(:all_layers)     { [layer, second_layer, delayed_layer, readonly_layer] }
 
   before do
-    allow(Dis::Jobs::Delete).to receive(:enqueue)
-    allow(Dis::Jobs::Store).to receive(:enqueue)
+    allow(Dis::Jobs::Delete).to receive(:perform_later)
+    allow(Dis::Jobs::Store).to receive(:perform_later)
   end
 
   after do
@@ -51,7 +51,7 @@ describe Dis::Storage do
       end
 
       it "should enqueue a job" do
-        expect(Dis::Jobs::Store).to receive(:enqueue).with(type, hash)
+        expect(Dis::Jobs::Store).to receive(:perform_later).with(type, hash)
         Dis::Storage.store(type, file)
       end
 
@@ -216,7 +216,7 @@ describe Dis::Storage do
       end
 
       it "should enqueue a job" do
-        expect(Dis::Jobs::Delete).to receive(:enqueue).with(type, hash)
+        expect(Dis::Jobs::Delete).to receive(:perform_later).with(type, hash)
         Dis::Storage.delete(type, hash)
       end
 
