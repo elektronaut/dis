@@ -25,6 +25,36 @@ describe Dis::Storage do
     Dis::Storage.layers.clear!
   end
 
+  describe ".file_digest" do
+    let(:input) { file }
+    subject { Dis::Storage.file_digest(input) }
+
+    context "when input is a Fog model" do
+      let(:input) { layer.store(type, hash, file.read) }
+      it { is_expected.to eq(hash) }
+    end
+
+    context "when input is a file" do
+      it { is_expected.to eq(hash) }
+    end
+
+    context "when input is a string" do
+      let(:input) { file.read }
+      it { is_expected.to eq(hash) }
+    end
+
+    context "when input is an uploaded file" do
+      let(:input) { uploaded_file }
+      it { is_expected.to eq(hash) }
+    end
+
+    it "should take a block" do
+      Dis::Storage.file_digest(input) do |h|
+        expect(h).to eq(hash)
+      end
+    end
+  end
+
   describe ".layers" do
     it "should be an instance of Dis::Layers" do
       expect(Dis::Storage.layers).to be_a(Dis::Layers)

@@ -17,6 +17,21 @@ module Dis
   # one writeable, non-delayed layer must exist.
   class Storage
     class << self
+      # Returns a hex digest for a given binary. Accepts files, strings
+      # and Fog models.
+      def file_digest(file, &block)
+        hash = case file
+        when Fog::Model
+          digest.hexdigest(file.body)
+        when String
+          digest.hexdigest(file)
+        else
+          digest.file(file.path).hexdigest
+        end
+        yield hash if block_given?
+        hash
+      end
+
       # Exposes the layer set, which is an instance of
       # <tt>Dis::Layers</tt>.
       def layers
@@ -113,7 +128,7 @@ module Dis
       private
 
       def store_immediately!(type, file)
-        hash_file(file) do |hash|
+        file_digest(file) do |hash|
           layers.immediate.writeable.each do |layer|
             layer.store(type, hash, file)
           end
@@ -134,19 +149,6 @@ module Dis
 
       def digest
         Digest::SHA1
-      end
-
-      def hash_file(file, &block)
-        hash = case file
-        when Fog::Model
-          digest.hexdigest(file.body)
-        when String
-          digest.hexdigest(file)
-        else
-          digest.file(file.path).hexdigest
-        end
-        yield hash if block_given?
-        hash
       end
     end
   end
