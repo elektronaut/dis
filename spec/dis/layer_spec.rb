@@ -203,4 +203,16 @@ describe Dis::Layer do
       end
     end
   end
+
+  describe "#name" do
+    subject { layer.name }
+    context "without a path set" do
+      it { is_expected.to eq("Fog::Storage::Local::Real/") }
+    end
+
+    context "with a path set" do
+      let(:layer) { Dis::Layer.new(connection, path: "foo") }
+      it { is_expected.to eq("Fog::Storage::Local::Real/foo") }
+    end
+  end
 end

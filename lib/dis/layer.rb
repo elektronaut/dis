@@ -125,6 +125,13 @@ module Dis
       delete!(type, hash)
     end
 
+    # Returns a name for the layer.
+    #
+    #   layer.name # => "Fog::Storage::Local::Real/development"
+    def name
+      "#{connection.class.name}/#{path}"
+    end
+
     private
 
     def default_options
