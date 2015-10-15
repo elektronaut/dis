@@ -3,9 +3,8 @@ addons:
     repo_token: 75d1da76d5a205a703da8a9c13c7147bec4bd765dbb1195d85664f424b51cbf1
 language: ruby
 rvm:
-  - 1.9.3
   - 2.0.0
-  - 2.1.2
+  - 2.2.3
 env:
   - RAILS_ENV=test
 script:
