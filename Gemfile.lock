@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dis (1.0.3)
+    dis (1.0.4)
       fog (~> 1.26.0)
       pmap (~> 1.0.2)
       rails (~> 4.2.0)
