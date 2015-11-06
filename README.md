@@ -1,4 +1,4 @@
-# Dis [![Build Status](https://travis-ci.org/elektronaut/dis.png)](https://travis-ci.org/elektronaut/dis) [![Code Climate](https://codeclimate.com/github/elektronaut/dis.png)](https://codeclimate.com/github/elektronaut/dis) [![Code Climate](https://codeclimate.com/github/elektronaut/dis/coverage.png)](https://codeclimate.com/github/elektronaut/dis) [![Dependency Status](https://gemnasium.com/elektronaut/dis.svg)](https://gemnasium.com/elektronaut/dis)
+# Dis [![Build Status](https://travis-ci.org/elektronaut/dis.svg?branch=master)](https://travis-ci.org/elektronaut/dis) [![Code Climate](https://codeclimate.com/github/elektronaut/dis/badges/gpa.svg)](https://codeclimate.com/github/elektronaut/dis) [![Code Climate](https://codeclimate.com/github/elektronaut/dis/badges/coverage.svg)](https://codeclimate.com/github/elektronaut/dis) [![Dependency Status](https://gemnasium.com/elektronaut/dis.svg)](https://gemnasium.com/elektronaut/dis)
 
 Dis handles file uploads for your Rails app.
 It's similar to [Paperclip](https://github.com/thoughtbot/paperclip)
