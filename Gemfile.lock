@@ -174,7 +174,6 @@ GEM
       activesupport (>= 4.1.0)
     i18n (0.7.0)
     inflecto (0.0.2)
-    interception (0.5)
     ipaddress (0.8.0)
     json (1.8.3)
     loofah (2.0.3)
@@ -196,9 +195,6 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
-    pry-rescue (1.4.2)
-      interception (>= 0.5)
-      pry
     pry-stack_explorer (0.4.9.2)
       binding_of_caller (>= 0.7)
       pry (>= 0.9.11)
@@ -273,7 +269,6 @@ DEPENDENCIES
   codeclimate-test-reporter
   dis!
   pry
-  pry-rescue
   pry-stack_explorer
   rspec-rails (~> 3.3.0)
   sqlite3
