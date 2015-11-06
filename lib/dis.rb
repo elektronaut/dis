@@ -2,7 +2,7 @@
 
 require "digest/sha1"
 require "fog/core"
-require "fog/local/storage"
+require "fog/local"
 require "active_job"
 require "pmap"
 require "dis/engine"
