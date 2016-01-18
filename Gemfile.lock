@@ -4,7 +4,7 @@ PATH
     dis (1.0.4)
       fog (~> 1.35)
       fog-local
-      pmap (~> 1.0.2)
+      pmap (~> 1.1.0)
       rails (~> 4.2.0)
 
 GEM
@@ -188,7 +188,7 @@ GEM
     multi_json (1.11.2)
     nokogiri (1.6.7.1)
       mini_portile2 (~> 2.0.0.rc2)
-    pmap (1.0.2)
+    pmap (1.1.1)
     pry (0.10.3)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
@@ -228,23 +228,23 @@ GEM
       builder
       nokogiri (>= 1.4.1)
       trollop
-    rspec-core (3.3.2)
-      rspec-support (~> 3.3.0)
-    rspec-expectations (3.3.1)
+    rspec-core (3.4.1)
+      rspec-support (~> 3.4.0)
+    rspec-expectations (3.4.0)
       diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.3.0)
-    rspec-mocks (3.3.2)
+      rspec-support (~> 3.4.0)
+    rspec-mocks (3.4.1)
       diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.3.0)
-    rspec-rails (3.3.3)
+      rspec-support (~> 3.4.0)
+    rspec-rails (3.4.0)
       actionpack (>= 3.0, < 4.3)
       activesupport (>= 3.0, < 4.3)
       railties (>= 3.0, < 4.3)
-      rspec-core (~> 3.3.0)
-      rspec-expectations (~> 3.3.0)
-      rspec-mocks (~> 3.3.0)
-      rspec-support (~> 3.3.0)
-    rspec-support (3.3.0)
+      rspec-core (~> 3.4.0)
+      rspec-expectations (~> 3.4.0)
+      rspec-mocks (~> 3.4.0)
+      rspec-support (~> 3.4.0)
+    rspec-support (3.4.1)
     simplecov (0.11.1)
       docile (~> 1.1.0)
       json (~> 1.8)
@@ -274,5 +274,5 @@ DEPENDENCIES
   dis!
   pry
   pry-stack_explorer
-  rspec-rails (~> 3.3.0)
+  rspec-rails (~> 3.4.0)
   sqlite3
