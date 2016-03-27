@@ -47,7 +47,7 @@ module Dis
   class Layer
     attr_reader :connection
 
-    def initialize(connection, options={})
+    def initialize(connection, options = {})
       options     = default_options.merge(options)
       @connection = connection
       @delayed    = options[:delayed]
@@ -101,17 +101,21 @@ module Dis
     #
     #    layer.exists?("documents", hash)
     def exists?(type, hash)
-      (directory(type, hash) &&
-      directory(type, hash).files.head(key_component(type, hash))) ? true : false
+      if directory(type, hash) &&
+         directory(type, hash).files.head(key_component(type, hash))
+        true
+      else
+        false
+      end
     end
 
     # Retrieves a file from the store.
     #
     #    layer.get("documents", hash)
     def get(type, hash)
-      if dir = directory(type, hash)
-        dir.files.get(key_component(type, hash))
-      end
+      dir = directory(type, hash)
+      return unless dir
+      dir.files.get(key_component(type, hash))
     end
 
     # Deletes a file from the store.
@@ -138,8 +142,8 @@ module Dis
       { delayed: false, readonly: false, public: false, path: nil }
     end
 
-    def directory_component(type, hash)
-      path || ""
+    def directory_component(_type, _hash)
+      path || ''
     end
 
     def key_component(type, hash)
@@ -169,7 +173,7 @@ module Dis
       file.rewind if file.respond_to?(:rewind)
       directory!(type, hash).files.create(
         key:    key_component(type, hash),
-        body:   (file.kind_of?(Fog::Model) ? file.body : file),
+        body:   (file.is_a?(Fog::Model) ? file.body : file),
         public: public?
       )
     end

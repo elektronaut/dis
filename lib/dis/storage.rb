@@ -19,15 +19,15 @@ module Dis
     class << self
       # Returns a hex digest for a given binary. Accepts files, strings
       # and Fog models.
-      def file_digest(file, &block)
+      def file_digest(file)
         hash = case file
-        when Fog::Model
-          digest.hexdigest(file.body)
-        when String
-          digest.hexdigest(file)
-        else
-          digest.file(file.path).hexdigest
-        end
+               when Fog::Model
+                 digest.hexdigest(file.body)
+               when String
+                 digest.hexdigest(file)
+               else
+                 digest.file(file.path).hexdigest
+               end
         yield hash if block_given?
         hash
       end
@@ -83,15 +83,15 @@ module Dis
       # Returns an instance of Fog::Model.
       def get(type, hash)
         require_layers!
-        miss = false
-        layers.each do |layer|
-          if result = layer.get(type, hash)
-            store_immediately!(type, result) if miss
+
+        layers.inject(true) do |no_misses, layer|
+          result = layer.get(type, hash)
+          if result
+            store_immediately!(type, result) unless no_misses
             return result
-          else
-            miss = true
           end
         end
+
         raise Dis::Errors::NotFoundError
       end
 
@@ -136,15 +136,11 @@ module Dis
       end
 
       def require_layers!
-        unless layers.any?
-          raise Dis::Errors::NoLayersError
-        end
+        raise Dis::Errors::NoLayersError unless layers.any?
       end
 
       def require_writeable_layers!
-        unless layers.immediate.writeable.any?
-          raise Dis::Errors::NoLayersError
-        end
+        raise Dis::Errors::NoLayersError unless layers.immediate.writeable.any?
       end
 
       def digest

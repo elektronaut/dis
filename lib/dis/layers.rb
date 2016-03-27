@@ -7,7 +7,7 @@ module Dis
   class Layers
     include Enumerable
 
-    def initialize(layers=[])
+    def initialize(layers = [])
       @layers = layers
     end
 
@@ -28,7 +28,7 @@ module Dis
 
     # Returns a new instance containing only the delayed layers.
     def delayed
-      self.class.new select { |layer| layer.delayed? }
+      self.class.new select(&:delayed?)
     end
 
     # Returns true if one or more delayed layers exist.
@@ -38,7 +38,7 @@ module Dis
 
     # Returns a new instance containing only the immediate layers.
     def immediate
-      self.class.new select { |layer| layer.immediate? }
+      self.class.new select(&:immediate?)
     end
 
     # Returns true if one or more immediate layers exist.
@@ -48,7 +48,7 @@ module Dis
 
     # Returns a new instance containing only the readonly layers.
     def readonly
-      self.class.new select { |layer| layer.readonly? }
+      self.class.new select(&:readonly?)
     end
 
     # Returns true if one or more readonly layers exist.
@@ -58,7 +58,7 @@ module Dis
 
     # Returns a new instance containing only the writeable layers.
     def writeable
-      self.class.new select { |layer| layer.writeable? }
+      self.class.new select(&:writeable?)
     end
 
     # Returns true if one or more writeable layers exist.

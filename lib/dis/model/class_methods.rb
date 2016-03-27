@@ -25,7 +25,7 @@ module Dis
       #   class Document < ActiveRecord::Base; end
       #   Document.dis_type # => "documents"
       def dis_type
-        @dis_type ||= self.table_name
+        @dis_type ||= table_name
       end
 
       # Sets the storage type name.

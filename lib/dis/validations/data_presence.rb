@@ -8,9 +8,7 @@ module Dis
       # Validates that a record has data, either freshly assigned or
       # persisted in the storage. Adds a `:blank` error on `:data`if not.
       def validate(record)
-        unless record.data?
-          record.errors.add(:data, :blank)
-        end
+        record.errors.add(:data, :blank) unless record.data?
       end
     end
   end

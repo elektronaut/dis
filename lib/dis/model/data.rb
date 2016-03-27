@@ -7,16 +7,16 @@ module Dis
     # Facilitates communication between the model and the storage,
     # and holds any newly assigned data before the record is saved.
     class Data
-      def initialize(record, raw=nil)
+      def initialize(record, raw = nil)
         @record = record
         @raw = raw
       end
 
       # Returns true if two Data objects represent the same data.
-      def ==(comp)
+      def ==(other)
         # TODO: This can be made faster by
         # comparing hashes for stored objects.
-        comp.read == read
+        other.read == read
       end
 
       # Returns true if data exists either in memory or in storage.
@@ -86,13 +86,17 @@ module Dis
         if object.respond_to?(:body)
           object.body
         elsif object.respond_to?(:read)
-          object.rewind
-          response = object.read
-          object.rewind
-          response
+          rewind_and_read(object)
         else
           object
         end
+      end
+
+      def rewind_and_read(object)
+        object.rewind
+        response = object.read
+        object.rewind
+        response
       end
 
       def storage_type
@@ -110,9 +114,7 @@ module Dis
         )
       end
 
-      def raw
-        @raw
-      end
+      attr_reader :raw
     end
   end
 end

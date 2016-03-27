@@ -76,7 +76,7 @@ module Dis
   # If you want to validate content types, size or similar, simply use standard
   # Rails validations on the metadata attributes:
   #
-  #   validates :content_type, presence: true, format: /\Aapplication\/(x\-)?pdf\z/
+  #   validates :content_type, presence: true, format: /\Aapplication\/pdf\z/
   #   validates :filename, presence: true, format: /\A[\w_\-\.]+\.pdf\z/i
   #   validates :content_length, numericality: { less_than: 5.megabytes }
   module Model
@@ -125,9 +125,9 @@ module Dis
     private
 
     def cleanup_data
-      if previous_hash = changes[dis_attribute(:content_hash)].try(&:first)
-        dis_data.expire(previous_hash)
-      end
+      previous_hash = changes[dis_attribute(:content_hash)].try(&:first)
+      return unless previous_hash
+      dis_data.expire(previous_hash)
     end
 
     def delete_data
@@ -135,9 +135,7 @@ module Dis
     end
 
     def store_data
-      if dis_data.changed?
-        dis_set :content_hash, dis_data.store!
-      end
+      dis_set :content_hash, dis_data.store! if dis_data.changed?
     end
 
     def dis_get(attribute_name)
@@ -158,7 +156,7 @@ module Dis
 
     # We don't want the data column when doing a partial write.
     def keys_for_partial_write
-      super.reject { |a| a == "data" }
+      super.reject { |a| a == 'data' }
     end
   end
 end
