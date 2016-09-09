@@ -29,6 +29,11 @@ describe Dis::Validations::DataPresence do
     it { is_expected.to include("can't be blank") }
   end
 
+  context 'when data is a blank string' do
+    let(:image) { ImageWithValidations.new(data: '') }
+    it { is_expected.to include("can't be blank") }
+  end
+
   context 'when data is set' do
     let(:image) { ImageWithValidations.new(data: uploaded_file) }
     it { is_expected.to eq([]) }
