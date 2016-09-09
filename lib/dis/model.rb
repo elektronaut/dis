@@ -100,17 +100,25 @@ module Dis
 
     # Assigns new data. This also sets <tt>content_length</tt>, and resets
     # <tt>content_hash</tt> to nil.
-    def data=(new_data)
-      new_data = Dis::Model::Data.new(self, new_data)
+    def data=(raw_data)
+      new_data = Dis::Model::Data.new(self, raw_data)
       attribute_will_change!('data') unless new_data == dis_data
       @dis_data = new_data
-      dis_set :content_hash, nil
+      dis_set :content_hash, if raw_data.nil?
+                               nil
+                             else
+                               Storage.file_digest(new_data.read)
+                             end
       dis_set :content_length, dis_data.content_length
     end
 
     # Returns true if the data has been changed since the object was last saved.
     def data_changed?
       changes.include?('data')
+    end
+
+    def dis_stored?
+      !(new_record? || data_changed?)
     end
 
     # Assigns new data from an uploaded file. In addition to the actions

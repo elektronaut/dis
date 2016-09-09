@@ -56,16 +56,12 @@ describe Dis::Model do
       expect(image.content_length).to eq(6)
     end
 
-    it 'should not store the file' do
-      expect(layer.exists?('images', hash)).to be false
+    it 'should set the content hash' do
+      expect(image.content_hash).to eq(hash)
     end
 
-    context 'with an existing object' do
-      let(:image) { Image.create(file: uploaded_file, accept: true) }
-
-      it 'should reset the content hash' do
-        expect(image.content_hash).to be nil
-      end
+    it 'should not store the file' do
+      expect(layer.exists?('images', hash)).to be false
     end
   end
 

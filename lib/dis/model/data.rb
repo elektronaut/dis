@@ -104,7 +104,7 @@ module Dis
       end
 
       def stored?
-        !content_hash.blank?
+        @record.dis_stored? && !content_hash.blank?
       end
 
       def stored
