@@ -11,6 +11,8 @@ namespace :dis do
 
     models = ENV['MODELS'].split(',').map(&:strip).map(&:constantize)
 
+    jobs = Set.new
+
     models.each do |model|
       puts "-- #{model.name} --"
 
@@ -19,21 +21,43 @@ namespace :dis do
                 .select(content_hash_attr)
                 .uniq
                 .map { |r| r.send(content_hash_attr) }
+      global_missing = objects.dup
 
       puts "Unique objects: #{objects.length}"
 
       Dis::Storage.layers.each do |layer|
+        print "Checking #{layer.name}... "
         existing = objects
                    .pmap { |hash| [hash, layer.exists?(model.dis_type, hash)] }
                    .select(&:last)
                    .map(&:first)
         missing = objects - existing
-        puts "#{layer.name}: #{existing.length} (#{missing.length} missing)"
+        global_missing -= existing
+        puts "#{existing.length} existing, #{missing.length} missing"
 
-        puts "Missing objects:\n#{missing.inspect}" if missing.any?
+        next unless layer.delayed? #&& layer.writeable?
+
+        jobs += missing.pmap do |hash|
+          [model.dis_type, hash] if Dis::Storage.exists?(model.dis_type, hash)
+        end.compact
+      end
+
+      if global_missing.any?
+        puts "\n#{global_missing.length} objects are missing from all layers:"
+        pp global_missing
       end
 
       puts
+    end
+
+    if jobs.any?
+      print "#{jobs.length} objects can be transferred to delayed layers, " \
+            "queue now? (y/n) "
+      response = STDIN.gets.chomp
+      if response =~ /^y/i
+        puts "Queueing jobs..."
+        jobs.each { |type, hash| Dis::Jobs::Store.perform_later(type, hash) }
+      end
     end
   end
 end
