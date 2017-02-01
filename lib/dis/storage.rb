@@ -84,15 +84,16 @@ module Dis
       def get(type, hash)
         require_layers!
 
-        layers.inject(true) do |no_misses, layer|
-          result = layer.get(type, hash)
-          if result
-            store_immediately!(type, result) unless no_misses
-            return result
-          end
+        fetch_count = 0
+        result = layers.inject(nil) do |res, layer|
+          fetch_count += 1
+          res || layer.get(type, hash)
         end
 
-        raise Dis::Errors::NotFoundError
+        raise Dis::Errors::NotFoundError unless result
+
+        store_immediately!(type, result) if fetch_count > 1
+        result
       end
 
       # Deletes a file from all layers. Kicks off a
