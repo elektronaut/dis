@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dis (1.0.8)
+    dis (1.0.9)
       fog (~> 1.35)
       fog-local
       pmap (~> 1.1.0)
@@ -304,4 +304,4 @@ DEPENDENCIES
   sqlite3
 
 BUNDLED WITH
-   1.13.6
+   1.14.3

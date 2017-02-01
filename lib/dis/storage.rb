@@ -86,8 +86,10 @@ module Dis
 
         fetch_count = 0
         result = layers.inject(nil) do |res, layer|
-          fetch_count += 1
-          res || layer.get(type, hash)
+          res || lambda do
+            fetch_count += 1
+            layer.get(type, hash)
+          end.call
         end
 
         raise Dis::Errors::NotFoundError unless result
