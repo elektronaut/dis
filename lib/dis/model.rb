@@ -86,6 +86,7 @@ module Dis
       before_save :store_data
       after_save :cleanup_data
       after_destroy :delete_data
+      attribute :data, :binary
     end
 
     # Returns the data as a binary string, or nil if no data has been set.
@@ -133,9 +134,9 @@ module Dis
     private
 
     def cleanup_data
-      previous_hash = changes[dis_attribute(:content_hash)].try(&:first)
-      return unless previous_hash
-      dis_data.expire(previous_hash)
+      return unless @previous_content_hash
+      dis_data.expire(@previous_content_hash)
+      @previous_content_hash = nil
     end
 
     def delete_data
@@ -144,6 +145,8 @@ module Dis
 
     def store_data
       dis_set :content_hash, dis_data.store! if dis_data.changed?
+      @previous_content_hash = changes[dis_attribute(:content_hash)]
+                               .try(&:first)
     end
 
     def dis_get(attribute_name)
