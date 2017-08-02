@@ -134,7 +134,7 @@ module Dis
     private
 
     def cleanup_data
-      return unless @previous_content_hash
+      return if @previous_content_hash.blank?
       dis_data.expire(@previous_content_hash)
       @previous_content_hash = nil
     end
