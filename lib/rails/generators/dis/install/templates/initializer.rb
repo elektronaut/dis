@@ -17,5 +17,6 @@ Dis::Storage.layers << Dis::Layer.new(
 #     aws_secret_access_key: AWS_SECRET_ACCESS_KEY
 #   }),
 #   path: "my_bucket",
-#   delayed: true
+#   delayed: true,
+#   readonly: false
 # )

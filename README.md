@@ -8,30 +8,39 @@
 
 # Dis
 
-Dis handles file uploads for your Rails app.
-It's similar to [Paperclip](https://github.com/thoughtbot/paperclip)
-and [Carrierwave](https://github.com/carrierwaveuploader/carrierwave),
-but different in a few ways. Chiefly, it's much, much simpler.
+Dis is a content-adressable store for file uploads in your Rails app.
 
-Your files are stored in one or more layers, either on disk or in
-a cloud somewhere. [Fog](http://fog.io) and
-[Active Job](https://github.com/rails/activejob) does most of the
-heavy lifting.
+Data can be stored either on disk or in the cloud - anywhere that
+[Fog](http://fog.io) knows how to talk to.
 
-Files are indexed by the SHA1 hash of their contents. This means you get
-deduplication for free. This also means you run the (very slight) risk of
-hash collisions. There is no concept of updates in the data store,
-a file with changed content is by definition a different file.
+It doesn't do any processing, but it's a simple foundation to roll
+your own on. If you're looking to handle image uploads, check out
+[DynamicImage](https://github.com/elektronaut/dynamic_image). It's
+built on top of Dis and handles resizing, cropping and more on demand.
 
-It does not do any processing. The idea is to provide a simple foundation
-other gems can build on. If you are looking to handle uploaded images,
-check out [DynamicImage](https://github.com/elektronaut/dynamic_image).
+Requires Rails 4.2+.
 
-Requires Rails 4.2+ and Ruby 1.9.3+.
+## Layers
 
-## Documentation
+The underlaying storage consists of one or more layers. A layer is a
+unit of storage location, which can either be a local path, or a cloud
+provider like Amazon S3 or Google Cloud Storage.
 
-[Documentation on RubyDoc.info](http://rdoc.info/gems/dis)
+There are two types of layers, immediate and delayed. Files are
+written to immediate layers and then replicated to the rest in the
+background using ActiveJob.
+
+Reads are performed from the first available layer. In case of a read
+miss, the file is backfilled from the next layer.
+
+An example configuration could be to have a local layer first, and
+then for example an Amazon S3 bucket. This provides you with an
+on-disk cache backed by cloud storage. You can also add additional
+layers if you want fault tolerance across regions or even providers.
+
+Layers can be configured as read-only. This can be useful if you want
+to read from your staging or production environment while developing
+locally, or if you're transitioning away from a provider.
 
 ## Installation
 
@@ -47,6 +56,15 @@ Now, run the generator to install the initializer:
 bin/rails generate dis:install
 ```
 
+By default, files will be stored in `db/dis`. You can edit
+`config/initializers/dis.rb` if you want to change the path or add
+additional layers. Note that you also need the corresponding
+[Fog gem](https://github.com/fog) if you want to use cloud storage:
+
+```ruby
+gem "fog-aws"
+```
+
 ## Usage
 
 Run the generator to create your model.
@@ -58,7 +76,7 @@ bin/rails generate dis:model Document
 This will create a model along with a migration.
 
 Here's what your model might look like. Note that Dis does not
-validate any data by default, you are expected to use the Rails validators.
+validate any data by default, but you can use the standard Rails validators.
 A validator for validating presence of data is provided.
 
 ```ruby
@@ -78,69 +96,18 @@ document_params = params.require(:document).permit(:file)
 @document = Document.create(document_params)
 ```
 
-You can also assign the data directly.
+You can also pass a file directly:
 
 ```ruby
-Document.create(
-  data:         File.open('document.pdf'),
-  content_type: 'application/pdf',
-  filename:     'document.pdf'
-)
+Document.create(data: File.open('document.pdf'),
+                content_type: 'application/pdf',
+                filename: 'document.pdf')
 ```
 
-## Defining layers
-
-The install generator will set you up with a local storage layer on disk,
-but this is configurable in `config/initializers/dis.rb`.
-
-You can have as many layers as you want, any storage provider
-[supported by Fog](http://fog.io/storage/) should work in theory. Only the
-local storage is loaded by default, you'll have to manually require your provider.
+..or even a string:
 
 ```ruby
-require 'fog/aws/storage'
-```
-
-Having a local layer first is a good idea, this will provide you
-with a cache on disk. Any misses will be filled from the next layer.
-
-```ruby
-Dis::Storage.layers << Dis::Layer.new(
-  Fog::Storage.new({provider: 'Local', local_root: Rails.root.join('db', 'binaries')}),
-  path: Rails.env
-)
-```
-
-Delayed layers will be processed out of the request cycle using
-whatever adapter you've configured
-[Active Job](https://github.com/rails/activejob) to use.
-Note: You must have at least one non-delayed layer.
-
-```ruby
-if Rails.env.production?
-  Dis::Storage.layers << Dis::Layer.new(
-    Fog::Storage.new({
-      provider:              'AWS',
-      aws_access_key_id:     YOUR_AWS_ACCESS_KEY_ID,
-      aws_secret_access_key: YOUR_AWS_SECRET_ACCESS_KEY
-    }),
-    path: "my_bucket",
-    delayed: true
-  )
-end
-```
-
-You can also set layers to be read only. This is handy if you want to
-access production data from your development environment, or if you
-are in the process of migration from one provider to another.
-
-```ruby
-if Rails.env.development?
-  Dis::Storage.layers << Dis::Layer.new(
-    Fog::Storage.new(...),
-    readonly: true
-  )
-end
+Document.create(data: 'foo', content_type: 'text/plain', filename: 'foo.txt')
 ```
 
 ## Interacting with the store
@@ -149,10 +116,10 @@ You can interact directly with the store if you want.
 
 ```ruby
 file = File.open("foo.txt")
-hash = Dis::Storage.store("stuff", file) # => "8843d7f92416211de9ebb963ff4ce28125932878"
-Dis::Storage.exists?("stuff", hash)      # => true
-Dis::Storage.get("stuff", hash).body     # => "foobar"
-Dis::Storage.delete("stuff", hash)       # => true
+hash = Dis::Storage.store("documents", file) # => "8843d7f92416211de9ebb963ff4ce28125932878"
+Dis::Storage.exists?("documents", hash)      # => true
+Dis::Storage.get("documents", hash).body     # => "foobar"
+Dis::Storage.delete("documents", hash)       # => true
 ```
 
 ## License
