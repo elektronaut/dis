@@ -1,4 +1,12 @@
-# Dis [![Build Status](https://travis-ci.org/elektronaut/dis.svg?branch=master)](https://travis-ci.org/elektronaut/dis) [![Code Climate](https://codeclimate.com/github/elektronaut/dis/badges/gpa.svg)](https://codeclimate.com/github/elektronaut/dis) [![Code Climate](https://codeclimate.com/github/elektronaut/dis/badges/coverage.svg)](https://codeclimate.com/github/elektronaut/dis) [![Dependency Status](https://gemnasium.com/elektronaut/dis.svg)](https://gemnasium.com/elektronaut/dis)
+[![Version](https://img.shields.io/gem/v/dis.svg?style=flat)](https://rubygems.org/gems/dis)
+[![Build Status](https://travis-ci.org/elektronaut/dis.svg?branch=master)](https://travis-ci.org/elektronaut/dis)
+[![Code Climate](https://codeclimate.com/github/elektronaut/dis/badges/gpa.svg)](https://codeclimate.com/github/elektronaut/dis)
+[![Code Climate](https://codeclimate.com/github/elektronaut/dis/badges/coverage.svg)](https://codeclimate.com/github/elektronaut/dis)
+[![Dependency Status](https://gemnasium.com/elektronaut/dis.svg)](https://gemnasium.com/elektronaut/dis)
+[![Inline docs](http://inch-ci.org/github/elektronaut/dis.svg)](http://inch-ci.org/github/elektronaut/dis)
+[![Security](https://hakiri.io/github/elektronaut/dis/master.svg)](https://hakiri.io/github/elektronaut/dis/master)
+
+# Dis
 
 Dis handles file uploads for your Rails app.
 It's similar to [Paperclip](https://github.com/thoughtbot/paperclip)
