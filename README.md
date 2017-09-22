@@ -110,7 +110,23 @@ Document.create(data: File.open('document.pdf'),
 Document.create(data: 'foo', content_type: 'text/plain', filename: 'foo.txt')
 ```
 
-## Interacting with the store
+Getting your file back out is straightforward:
+
+``` ruby
+class DocumentsController < ApplicationController
+  def show
+    @document = Document.find(params[:id])
+    if stale?(@document)
+      send_data(@document.data,
+                filename: @document.filename,
+                type: @document.content_type,
+                disposition: "attachment)
+    end
+  end
+end
+```
+
+## Behind the scenes
 
 You can interact directly with the store if you want.
 
