@@ -293,6 +293,69 @@ describe Dis::Storage do
     end
   end
 
+  describe '.change_type' do
+    let(:new_type) { 'changed_test_files' }
+
+    context 'with no immediately writeable layers' do
+      before do
+        Dis::Storage.layers << delayed_layer
+        Dis::Storage.layers << readonly_layer
+      end
+
+      it 'should raise an error' do
+        expect do
+          Dis::Storage.change_type(type, new_type, hash)
+        end.to raise_error(Dis::Errors::NoLayersError)
+      end
+    end
+
+    context 'when the file exists' do
+      before do
+        all_layers.each do |layer|
+          layer.send(:store!, type, hash, file)
+          Dis::Storage.layers << layer
+        end
+      end
+
+      it 'should return the hash' do
+        expect(Dis::Storage.change_type(type, new_type, hash)).to eq(hash)
+      end
+
+      it 'should enqueue a job' do
+        expect(Dis::Jobs::ChangeType).to receive(:perform_later).with(type, new_type, hash)
+        Dis::Storage.change_type(type, new_type, hash)
+      end
+
+      it 'should move it in all immediate writeable layers' do
+        Dis::Storage.change_type(type, new_type, hash)
+        expect(layer.exists?(type, hash)).to be false
+        expect(second_layer.exists?(type, hash)).to be false
+        expect(layer.exists?(new_type, hash)).to be true
+        expect(second_layer.exists?(new_type, hash)).to be true
+      end
+
+      it 'should not move in readonly layers' do
+        expect(readonly_layer.exists?(type, hash)).to be true
+        expect(readonly_layer.exists?(new_type, hash)).to be false
+      end
+
+      it 'should not move in delayed layers' do
+        expect(delayed_layer.exists?(type, hash)).to be true
+        expect(delayed_layer.exists?(new_type, hash)).to be false
+      end
+    end
+
+    context "when the file doesn't exist" do
+      before { Dis::Storage.layers << layer }
+
+      it 'should raise an error' do
+        expect do
+          Dis::Storage.change_type(type, new_type, hash)
+        end.to raise_error(Dis::Errors::NotFoundError)
+      end
+    end
+  end
+
   describe '.delayed_delete' do
     before do
       all_layers.each do |layer|

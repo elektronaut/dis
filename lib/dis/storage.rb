@@ -38,6 +38,23 @@ module Dis
         @layers ||= Dis::Layers.new
       end
 
+      # Changes the type of an object. Kicks off a
+      # <tt>Dis::Jobs::ChangeType</tt> job if any delayed layers are defined.
+      #
+      #   Dis::Storage.change_type("old_things", "new_things", hash)
+      def change_type(prev_type, new_type, hash)
+        require_writeable_layers!
+        file = get(prev_type, hash)
+        store_immediately!(new_type, file)
+        layers.immediate.writeable.each do |layer|
+          layer.delete(prev_type, hash)
+        end
+        if layers.delayed.writeable.any?
+          Dis::Jobs::ChangeType.perform_later(prev_type, new_type, hash)
+        end
+        hash
+      end
+
       # Stores a file and returns a digest. Kicks off a
       # <tt>Dis::Jobs::Store</tt> job if any delayed layers are defined.
       #
