@@ -66,7 +66,7 @@ module Dis
       !delayed?
     end
 
-    # Returns true if the layer isn't a delayed layer.
+    # Returns true if the layer is public.
     def public?
       @public
     end
