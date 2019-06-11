@@ -41,18 +41,18 @@ module Dis
       # Changes the type of an object. Kicks off a
       # <tt>Dis::Jobs::ChangeType</tt> job if any delayed layers are defined.
       #
-      #   Dis::Storage.change_type("old_things", "new_things", hash)
-      def change_type(prev_type, new_type, hash)
+      #   Dis::Storage.change_type("old_things", "new_things", key)
+      def change_type(prev_type, new_type, key)
         require_writeable_layers!
-        file = get(prev_type, hash)
+        file = get(prev_type, key)
         store_immediately!(new_type, file)
         layers.immediate.writeable.each do |layer|
-          layer.delete(prev_type, hash)
+          layer.delete(prev_type, key)
         end
         if layers.delayed.writeable.any?
-          Dis::Jobs::ChangeType.perform_later(prev_type, new_type, hash)
+          Dis::Jobs::ChangeType.perform_later(prev_type, new_type, key)
         end
-        hash
+        key
       end
 
       # Stores a file and returns a digest. Kicks off a
@@ -81,11 +81,11 @@ module Dis
 
       # Returns true if the file exists in any layer.
       #
-      #   Dis::Storage.exists?("things", hash) # => true
-      def exists?(type, hash)
+      #   Dis::Storage.exists?("things", key) # => true
+      def exists?(type, key)
         require_layers!
         layers.each do |layer|
-          return true if layer.exists?(type, hash)
+          return true if layer.exists?(type, key)
         end
         false
       end
@@ -98,14 +98,14 @@ module Dis
       # first available layer, then store it in all immediate layer.
       #
       # Returns an instance of Fog::Model.
-      def get(type, hash)
+      def get(type, key)
         require_layers!
 
         fetch_count = 0
         result = layers.inject(nil) do |res, layer|
           res || lambda do
             fetch_count += 1
-            layer.get(type, hash)
+            layer.get(type, key)
           end.call
         end
 
@@ -120,18 +120,18 @@ module Dis
       # Returns true if the file existed in any immediate layers,
       # or false if not.
       #
-      #   Dis::Storage.delete("things", hash)
+      #   Dis::Storage.delete("things", key)
       #   # => true
-      #   Dis::Storage.delete("things", hash)
+      #   Dis::Storage.delete("things", key)
       #   # => false
-      def delete(type, hash)
+      def delete(type, key)
         require_writeable_layers!
         deleted = false
         layers.immediate.writeable.each do |layer|
-          deleted = true if layer.delete(type, hash)
+          deleted = true if layer.delete(type, key)
         end
         if layers.delayed.writeable.any?
-          Dis::Jobs::Delete.perform_later(type, hash)
+          Dis::Jobs::Delete.perform_later(type, key)
         end
         deleted
       end
@@ -139,9 +139,9 @@ module Dis
       # Deletes content from all delayed layers.
       #
       #   Dis::Storage.delayed_delete("things", hash)
-      def delayed_delete(type, hash)
+      def delayed_delete(type, key)
         layers.delayed.writeable.each do |layer|
-          layer.delete(type, hash)
+          layer.delete(type, key)
         end
       end
 

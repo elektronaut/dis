@@ -83,26 +83,26 @@ module Dis
 
     # Stores a file.
     #
-    #   hash = Digest::SHA1.file(file.path).hexdigest
-    #   layer.store("documents", hash, path)
+    #   key = Digest::SHA1.file(file.path).hexdigest
+    #   layer.store("documents", key, path)
     #
-    # Hash must be a hex digest of the file content. If an object with the
+    # The key must be a hex digest of the file content. If an object with the
     # supplied hash already exists, no action will be performed. In other
     # words, no data will be overwritten if a hash collision occurs.
     #
     # Returns an instance of Fog::Model, or raises an error if the layer
     # is readonly.
-    def store(type, hash, file)
+    def store(type, key, file)
       raise Dis::Errors::ReadOnlyError if readonly?
-      store!(type, hash, file)
+      store!(type, key, file)
     end
 
-    # Returns true if a object with the given hash exists.
+    # Returns true if a object with the given key exists.
     #
-    #    layer.exists?("documents", hash)
-    def exists?(type, hash)
-      if directory(type, hash) &&
-         directory(type, hash).files.head(key_component(type, hash))
+    #    layer.exists?("documents", key)
+    def exists?(type, key)
+      if directory(type, key) &&
+         directory(type, key).files.head(key_component(type, key))
         true
       else
         false
@@ -111,22 +111,22 @@ module Dis
 
     # Retrieves a file from the store.
     #
-    #    layer.get("documents", hash)
-    def get(type, hash)
-      dir = directory(type, hash)
+    #    layer.get("documents", key)
+    def get(type, key)
+      dir = directory(type, key)
       return unless dir
-      dir.files.get(key_component(type, hash))
+      dir.files.get(key_component(type, key))
     end
 
     # Deletes a file from the store.
     #
-    #   layer.delete("documents", hash)
+    #   layer.delete("documents", key)
     #
     # Returns true if the file was deleted, or false if it could not be found.
     # Raises an error if the layer is readonly.
-    def delete(type, hash)
+    def delete(type, key)
       raise Dis::Errors::ReadOnlyError if readonly?
-      delete!(type, hash)
+      delete!(type, key)
     end
 
     # Returns a name for the layer.
@@ -142,37 +142,37 @@ module Dis
       { delayed: false, readonly: false, public: false, path: nil }
     end
 
-    def directory_component(_type, _hash)
+    def directory_component(_type, _key)
       path || ''
     end
 
-    def key_component(type, hash)
-      [type, hash[0...2], hash[2..hash.length]].compact.join('/')
+    def key_component(type, key)
+      [type, key[0...2], key[2..key.length]].compact.join('/')
     end
 
-    def delete!(type, hash)
-      return false unless exists?(type, hash)
-      get(type, hash).destroy
+    def delete!(type, key)
+      return false unless exists?(type, key)
+      get(type, key).destroy
     end
 
-    def directory(type, hash)
-      connection.directories.get(directory_component(type, hash))
+    def directory(type, key)
+      connection.directories.get(directory_component(type, key))
     end
 
-    def directory!(type, hash)
-      dir = directory(type, hash)
+    def directory!(type, key)
+      dir = directory(type, key)
       dir ||= connection.directories.create(
-        key:    directory_component(type, hash),
+        key:    directory_component(type, key),
         public: public?
       )
       dir
     end
 
-    def store!(type, hash, file)
-      return get(type, hash) if exists?(type, hash)
+    def store!(type, key, file)
+      return get(type, key) if exists?(type, key)
       file.rewind if file.respond_to?(:rewind)
-      directory!(type, hash).files.create(
-        key:    key_component(type, hash),
+      directory!(type, key).files.create(
+        key:    key_component(type, key),
         body:   (file.is_a?(Fog::Model) ? file.body : file),
         public: public?
       )
