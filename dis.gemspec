@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 1.9.2'
 
   s.add_dependency 'rails', '~> 5.0'
-  s.add_dependency 'fog', '~> 1.35'
+  s.add_dependency 'fog-core', '~> 2.1.2'
   s.add_dependency 'fog-local'
   s.add_dependency 'pmap', '~> 1.1.0'
 
