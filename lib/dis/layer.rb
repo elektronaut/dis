@@ -101,7 +101,11 @@ module Dis
     #
     #    layer.existing("documents", keys)
     def existing(type, keys)
-      list = directory(type, keys.first).files.map(&:key)
+      list = []
+      directory(type, keys.first).files.each do |file|
+        list << file.key
+      end
+
       keys.select { |key| list.include?(key_component(type, key)) }
     end
 

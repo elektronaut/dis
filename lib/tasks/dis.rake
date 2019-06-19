@@ -34,16 +34,16 @@ namespace :dis do
         puts "#{existing.length} existing, #{missing.length} missing"
 
         next unless layer.delayed?
+
+        jobs += (missing - global_missing).pmap do |hash|
+          [model.dis_type, hash]
+        end.compact
       end
 
       if global_missing.any?
         puts "\n#{global_missing.length} objects are missing from all layers:"
         pp global_missing
       end
-
-      jobs += (objects - global_missing).pmap do |hash|
-        [model.dis_type, hash]
-      end.compact
 
       puts
     end
