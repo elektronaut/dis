@@ -114,6 +114,15 @@ describe Dis::Layer do
     end
   end
 
+  describe "#existing" do
+    let(:keys) { [hash, 'a655c388fceaf194657339c3242562de66c2d102'] }
+    before { layer.store(type, hash, file) }
+
+    subject { layer.existing(type, keys) }
+
+    it { is_expected.to eq([hash]) }
+  end
+
   describe '#exists?' do
     subject { layer.exists?(type, hash) }
 

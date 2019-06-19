@@ -97,6 +97,14 @@ module Dis
       store!(type, key, file)
     end
 
+    # Returns all the given keys that exist in the layer.
+    #
+    #    layer.existing("documents", keys)
+    def existing(type, keys)
+      list = directory(type, keys.first).files.map(&:key)
+      keys.select { |key| list.include?(key_component(type, key)) }
+    end
+
     # Returns true if a object with the given key exists.
     #
     #    layer.exists?("documents", key)

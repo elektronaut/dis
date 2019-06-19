@@ -27,25 +27,23 @@ namespace :dis do
 
       Dis::Storage.layers.each do |layer|
         print "Checking #{layer.name}... "
-        existing = objects
-                   .pmap { |hash| [hash, layer.exists?(model.dis_type, hash)] }
-                   .select(&:last)
-                   .map(&:first)
+
+        existing = layer.existing(model.dis_type, objects)
         missing = objects - existing
         global_missing -= existing
         puts "#{existing.length} existing, #{missing.length} missing"
 
-        next unless layer.delayed? #&& layer.writeable?
-
-        jobs += missing.pmap do |hash|
-          [model.dis_type, hash] if Dis::Storage.exists?(model.dis_type, hash)
-        end.compact
+        next unless layer.delayed?
       end
 
       if global_missing.any?
         puts "\n#{global_missing.length} objects are missing from all layers:"
         pp global_missing
       end
+
+      jobs += (objects - global_missing).pmap do |hash|
+        [model.dis_type, hash]
+      end.compact
 
       puts
     end
