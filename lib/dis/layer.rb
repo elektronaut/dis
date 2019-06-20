@@ -101,6 +101,8 @@ module Dis
     #
     #    layer.existing("documents", keys)
     def existing(type, keys)
+      return [] if keys.empty?
+
       list = []
       directory(type, keys.first).files.each do |file|
         list << file.key
