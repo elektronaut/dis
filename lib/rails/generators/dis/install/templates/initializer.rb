@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 # Be sure to restart your server when you modify this file.
 
 # Creates a local storage layer in db/dis:
 
 Dis::Storage.layers << Dis::Layer.new(
-  Fog::Storage.new(provider: 'Local', local_root: Rails.root.join('db', 'dis')),
+  Fog::Storage.new(provider: "Local", local_root: Rails.root.join("db", "dis")),
   path: Rails.env
 )
 

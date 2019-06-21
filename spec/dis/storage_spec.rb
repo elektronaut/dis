@@ -1,380 +1,426 @@
-# encoding: utf-8
+# frozen_string_literal: true
 
-require 'spec_helper'
+require "spec_helper"
 
 describe Dis::Storage do
-  let(:type) { 'test_files' }
-  let(:root_path) { Rails.root.join('tmp', 'spec') }
-  let(:hash) { '8843d7f92416211de9ebb963ff4ce28125932878' }
-  let(:file_path) { '../../support/fixtures/file.txt' }
+  let(:type) { "test_files" }
+  let(:root_path) { Rails.root.join("tmp", "spec") }
+  let(:hash) { "8843d7f92416211de9ebb963ff4ce28125932878" }
+  let(:file_path) { "../../support/fixtures/file.txt" }
   let(:file) { File.open(File.expand_path(file_path, __FILE__)) }
-  let(:uploaded_file) { Rack::Test::UploadedFile.new(file, 'text/plain') }
+  let(:uploaded_file) { Rack::Test::UploadedFile.new(file, "text/plain") }
   let(:connection) do
-    Fog::Storage.new(provider: 'Local', local_root: root_path)
+    Fog::Storage.new(provider: "Local", local_root: root_path)
   end
-  let(:layer) { Dis::Layer.new(connection, path: 'layer1') }
-  let(:second_layer) { Dis::Layer.new(connection, path: 'layer2') }
+  let(:layer) { Dis::Layer.new(connection, path: "layer1") }
+  let(:second_layer) { Dis::Layer.new(connection, path: "layer2") }
   let(:delayed_layer) do
-    Dis::Layer.new(connection, path: 'delayed', delayed: true)
+    Dis::Layer.new(connection, path: "delayed", delayed: true)
   end
   let(:readonly_layer) do
-    Dis::Layer.new(connection, path: 'readonly', readonly: true)
+    Dis::Layer.new(connection, path: "readonly", readonly: true)
   end
   let(:all_layers) { [layer, second_layer, delayed_layer, readonly_layer] }
 
   before do
+    described_class.layers.clear!
+    allow(Dis::Jobs::ChangeType).to receive(:perform_later)
     allow(Dis::Jobs::Delete).to receive(:perform_later)
     allow(Dis::Jobs::Store).to receive(:perform_later)
   end
 
   after do
     FileUtils.rm_rf(root_path) if File.exist?(root_path)
-    Dis::Storage.layers.clear!
   end
 
-  describe '.file_digest' do
+  describe ".file_digest" do
+    subject { described_class.file_digest(input) }
+
     let(:input) { file }
-    subject { Dis::Storage.file_digest(input) }
 
-    context 'when input is a Fog model' do
+    context "when input is a Fog model" do
       let(:input) { layer.store(type, hash, file.read) }
+
       it { is_expected.to eq(hash) }
     end
 
-    context 'when input is a file' do
+    context "when input is a file" do
       it { is_expected.to eq(hash) }
     end
 
-    context 'when input is a string' do
+    context "when input is a string" do
       let(:input) { file.read }
+
       it { is_expected.to eq(hash) }
     end
 
-    context 'when input is an uploaded file' do
+    context "when input is an uploaded file" do
       let(:input) { uploaded_file }
+
       it { is_expected.to eq(hash) }
     end
 
-    it 'should take a block' do
-      Dis::Storage.file_digest(input) do |h|
+    it "takes a block" do
+      described_class.file_digest(input) do |h|
         expect(h).to eq(hash)
       end
     end
   end
 
-  describe '.layers' do
-    it 'should be an instance of Dis::Layers' do
-      expect(Dis::Storage.layers).to be_a(Dis::Layers)
+  describe ".layers" do
+    it "is an instance of Dis::Layers" do
+      expect(described_class.layers).to be_a(Dis::Layers)
     end
   end
 
-  describe '.store' do
-    context 'with no immediately writeable layers' do
+  describe ".store" do
+    context "with no immediately writeable layers" do
       before do
-        Dis::Storage.layers << delayed_layer
-        Dis::Storage.layers << readonly_layer
+        described_class.layers << delayed_layer
+        described_class.layers << readonly_layer
       end
 
-      it 'should raise an error' do
+      it "raises an error" do
         expect do
-          Dis::Storage.store(type, file)
+          described_class.store(type, file)
         end.to raise_error(Dis::Errors::NoLayersError)
       end
     end
 
-    context 'with a file input' do
-      before { all_layers.each { |layer| Dis::Storage.layers << layer } }
+    context "with a file input" do
+      before { all_layers.each { |layer| described_class.layers << layer } }
 
-      it 'should return the hash' do
-        expect(Dis::Storage.store(type, file)).to eq(hash)
+      it "returns the hash" do
+        expect(described_class.store(type, file)).to eq(hash)
       end
 
-      it 'should enqueue a job' do
-        expect(Dis::Jobs::Store).to receive(:perform_later).with(type, hash)
-        Dis::Storage.store(type, file)
+      it "enqueues a job" do
+        described_class.store(type, file)
+        expect(Dis::Jobs::Store).to(
+          have_received(:perform_later).with(type, hash)
+        )
       end
 
-      it 'should store the file in immediate layers' do
-        Dis::Storage.store(type, file)
+      it "stores the file in the first immediate layer" do
+        described_class.store(type, file)
         expect(layer.exists?(type, hash)).to be true
+      end
+
+      it "stores the file in all immediate layers" do
+        described_class.store(type, file)
         expect(second_layer.exists?(type, hash)).to be true
       end
 
-      it 'should not store the file in delayed layers' do
-        Dis::Storage.store(type, file)
+      it "does not store the file in delayed layers" do
+        described_class.store(type, file)
         expect(delayed_layer.exists?(type, hash)).to be false
       end
 
-      it 'should not store the file in readonly layers' do
-        Dis::Storage.store(type, file)
+      it "does not store the file in readonly layers" do
+        described_class.store(type, file)
         expect(readonly_layer.exists?(type, hash)).to be false
       end
     end
 
-    context 'with a string input' do
-      let(:file) { 'foobar' }
-      before { Dis::Storage.layers << layer }
+    context "with a string input" do
+      let(:file) { "foobar" }
 
-      it 'should return the hash' do
-        expect(Dis::Storage.store(type, file)).to eq(hash)
+      before { described_class.layers << layer }
+
+      it "returns the hash" do
+        expect(described_class.store(type, file)).to eq(hash)
       end
     end
 
-    context 'with an UploadedFile input' do
-      before { Dis::Storage.layers << layer }
+    context "with an UploadedFile input" do
+      before { described_class.layers << layer }
 
-      it 'should return the hash' do
-        expect(Dis::Storage.store(type, uploaded_file)).to eq(hash)
+      it "returns the hash" do
+        expect(described_class.store(type, uploaded_file)).to eq(hash)
       end
     end
   end
 
-  describe '.delayed_store' do
-    before { all_layers.each { |layer| Dis::Storage.layers << layer } }
+  describe ".delayed_store" do
+    before { all_layers.each { |layer| described_class.layers << layer } }
 
     context "when the file doesn't exist" do
-      it 'should raise an error' do
+      it "raises an error" do
         expect do
-          Dis::Storage.delayed_store(type, hash)
+          described_class.delayed_store(type, hash)
         end.to raise_error(Dis::Errors::NotFoundError)
       end
     end
 
-    context 'when the file exists' do
-      before { layer.store(type, hash, file) }
-      before { Dis::Storage.delayed_store(type, hash) }
+    context "when the file exists" do
+      before do
+        layer.store(type, hash, file)
+        described_class.delayed_store(type, hash)
+      end
 
-      it 'should copy the file to delayed layers' do
+      it "copies the file to delayed layers" do
         expect(delayed_layer.exists?(type, hash)).to be true
       end
 
-      it 'should not copy the file to immediate layers' do
+      it "does not copy the file to immediate layers" do
         expect(second_layer.exists?(type, hash)).to be false
       end
 
-      it 'should not copy the file to readonly layers' do
+      it "does not copy the file to readonly layers" do
         expect(readonly_layer.exists?(type, hash)).to be false
       end
     end
   end
 
-  describe '.exists?' do
-    context 'with no layers' do
-      it 'should raise an error' do
+  describe ".exists?" do
+    context "with no layers" do
+      it "raises an error" do
         expect do
-          Dis::Storage.exists?(type, hash)
+          described_class.exists?(type, hash)
         end.to raise_error(Dis::Errors::NoLayersError)
       end
     end
 
-    context 'when the file exists in any layer' do
-      before { all_layers.each { |layer| Dis::Storage.layers << layer } }
-      before { delayed_layer.store(type, hash, file) }
+    context "when the file exists in any layer" do
+      before do
+        all_layers.each { |layer| described_class.layers << layer }
+        delayed_layer.store(type, hash, file)
+      end
 
-      it 'should return true' do
-        expect(Dis::Storage.exists?(type, hash)).to be true
+      it "returns true" do
+        expect(described_class.exists?(type, hash)).to be true
       end
     end
 
     context "when the file doesn't exist" do
-      before { all_layers.each { |layer| Dis::Storage.layers << layer } }
+      before { all_layers.each { |layer| described_class.layers << layer } }
 
-      it 'should return false' do
-        expect(Dis::Storage.exists?(type, hash)).to be false
+      it "returns false" do
+        expect(described_class.exists?(type, hash)).to be false
       end
     end
   end
 
-  describe '.get' do
-    context 'with no layers' do
-      it 'should raise a NoLayersError' do
+  describe ".get" do
+    context "with no layers" do
+      it "raises a NoLayersError" do
         expect do
-          Dis::Storage.get(type, hash)
+          described_class.get(type, hash)
         end.to raise_error(Dis::Errors::NoLayersError)
       end
     end
 
     context "when the file doesn't exist" do
-      before { Dis::Storage.layers << layer }
+      before { described_class.layers << layer }
 
-      it 'should raise an NotFoundError' do
+      it "raises an NotFoundError" do
         expect do
-          Dis::Storage.get(type, hash)
+          described_class.get(type, hash)
         end.to raise_error(Dis::Errors::NotFoundError)
       end
     end
 
-    context 'when the file exists in the first layer' do
-      before { all_layers.each { |layer| Dis::Storage.layers << layer } }
-      before { layer.store(type, hash, file) }
-      let!(:result) { Dis::Storage.get(type, hash) }
+    context "when the file exists in the first layer" do
+      before do
+        all_layers.each { |layer| described_class.layers << layer }
+        layer.store(type, hash, file)
+      end
 
-      it 'should find the file' do
+      let!(:result) { described_class.get(type, hash) }
+
+      it "finds the file" do
         expect(result).to be_a(Fog::Model)
       end
 
-      it 'should not replicate to the second layer' do
+      it "does not replicate to the second layer" do
         expect(second_layer.exists?(type, hash)).to be false
       end
     end
 
-    context 'when the file exist, but not in the first layer' do
-      before { all_layers.each { |layer| Dis::Storage.layers << layer } }
-      before { readonly_layer.send(:store!, type, hash, file) }
-      let!(:result) { Dis::Storage.get(type, hash) }
+    context "when the file exist, but not in the first layer" do
+      before do
+        all_layers.each { |layer| described_class.layers << layer }
+        readonly_layer.send(:store!, type, hash, file)
+      end
 
-      it 'should find the file' do
+      let!(:result) { described_class.get(type, hash) }
+
+      it "finds the file" do
         expect(result).to be_a(Fog::Model)
       end
 
-      it 'should replicate to all immediate layers' do
+      it "replicates to the first immediate layer" do
         expect(layer.exists?(type, hash)).to be true
+      end
+
+      it "replicates to all immediate layers" do
         expect(second_layer.exists?(type, hash)).to be true
       end
 
-      it 'should not replicate to delayed layers' do
+      it "does not replicate to delayed layers" do
         expect(delayed_layer.exists?(type, hash)).to be false
       end
     end
   end
 
-  describe '.delete' do
-    context 'with no immediately writeable layers' do
+  describe ".delete" do
+    context "with no immediately writeable layers" do
       before do
-        Dis::Storage.layers << delayed_layer
-        Dis::Storage.layers << readonly_layer
+        described_class.layers << delayed_layer
+        described_class.layers << readonly_layer
       end
 
-      it 'should raise an error' do
+      it "raises an error" do
         expect do
-          Dis::Storage.delete(type, hash)
+          described_class.delete(type, hash)
         end.to raise_error(Dis::Errors::NoLayersError)
       end
     end
 
-    context 'when the file exists' do
+    context "when the file exists" do
       before do
         all_layers.each do |layer|
           layer.send(:store!, type, hash, file)
-          Dis::Storage.layers << layer
+          described_class.layers << layer
         end
       end
 
-      it 'should return true' do
-        expect(Dis::Storage.delete(type, hash)).to eq(true)
+      it "returns true" do
+        expect(described_class.delete(type, hash)).to eq(true)
       end
 
-      it 'should enqueue a job' do
-        expect(Dis::Jobs::Delete).to receive(:perform_later).with(type, hash)
-        Dis::Storage.delete(type, hash)
+      it "enqueues a job" do
+        described_class.delete(type, hash)
+        expect(Dis::Jobs::Delete).to(
+          have_received(:perform_later).with(type, hash)
+        )
       end
 
-      it 'should delete it from all immediate writeable layers' do
-        Dis::Storage.delete(type, hash)
+      it "deletes it from the first immediate layers" do
+        described_class.delete(type, hash)
         expect(layer.exists?(type, hash)).to be false
+      end
+
+      it "deletes it from all immediate writeable layers" do
+        described_class.delete(type, hash)
         expect(second_layer.exists?(type, hash)).to be false
       end
 
-      it 'should not delete it from readonly layers' do
+      it "does not delete it from readonly layers" do
         expect(readonly_layer.exists?(type, hash)).to be true
       end
 
-      it 'should not delete it from delayed layers' do
+      it "does not delete it from delayed layers" do
         expect(delayed_layer.exists?(type, hash)).to be true
       end
     end
 
     context "when the file doesn't exist" do
-      before { Dis::Storage.layers << layer }
+      before { described_class.layers << layer }
 
-      it 'should return false' do
-        expect(Dis::Storage.delete(type, hash)).to eq(false)
+      it "returns false" do
+        expect(described_class.delete(type, hash)).to eq(false)
       end
     end
   end
 
-  describe '.change_type' do
-    let(:new_type) { 'changed_test_files' }
+  describe ".change_type" do
+    let(:new_type) { "changed_test_files" }
 
-    context 'with no immediately writeable layers' do
+    context "with no immediately writeable layers" do
       before do
-        Dis::Storage.layers << delayed_layer
-        Dis::Storage.layers << readonly_layer
+        described_class.layers << delayed_layer
+        described_class.layers << readonly_layer
       end
 
-      it 'should raise an error' do
+      it "raises an error" do
         expect do
-          Dis::Storage.change_type(type, new_type, hash)
+          described_class.change_type(type, new_type, hash)
         end.to raise_error(Dis::Errors::NoLayersError)
       end
     end
 
-    context 'when the file exists' do
+    context "when the file exists" do
       before do
         all_layers.each do |layer|
           layer.send(:store!, type, hash, file)
-          Dis::Storage.layers << layer
+          described_class.layers << layer
         end
+        described_class.change_type(type, new_type, hash)
       end
 
-      it 'should return the hash' do
-        expect(Dis::Storage.change_type(type, new_type, hash)).to eq(hash)
+      it "returns the hash" do
+        expect(described_class.change_type(type, new_type, hash)).to eq(hash)
       end
 
-      it 'should enqueue a job' do
-        expect(Dis::Jobs::ChangeType).to receive(:perform_later).with(type, new_type, hash)
-        Dis::Storage.change_type(type, new_type, hash)
+      it "enqueues a job" do
+        expect(Dis::Jobs::ChangeType).to(
+          have_received(:perform_later).with(type, new_type, hash)
+        )
       end
 
-      it 'should move it in all immediate writeable layers' do
-        Dis::Storage.change_type(type, new_type, hash)
-        expect(layer.exists?(type, hash)).to be false
-        expect(second_layer.exists?(type, hash)).to be false
+      it "stores it in the first immediate writeable layers" do
         expect(layer.exists?(new_type, hash)).to be true
+      end
+
+      it "deletes it in the first immediate writeable layers" do
+        expect(layer.exists?(type, hash)).to be false
+      end
+
+      it "stores it in all immediate writeable layers" do
         expect(second_layer.exists?(new_type, hash)).to be true
       end
 
-      it 'should not move in readonly layers' do
-        expect(readonly_layer.exists?(type, hash)).to be true
+      it "deletes it in all immediate writeable layers" do
+        expect(second_layer.exists?(type, hash)).to be false
+      end
+
+      it "does not store in readonly layers" do
         expect(readonly_layer.exists?(new_type, hash)).to be false
       end
 
-      it 'should not move in delayed layers' do
-        expect(delayed_layer.exists?(type, hash)).to be true
+      it "does not delete in readonly layers" do
+        expect(readonly_layer.exists?(type, hash)).to be true
+      end
+
+      it "does not store in delayed layers" do
         expect(delayed_layer.exists?(new_type, hash)).to be false
+      end
+
+      it "does not delete in delayed layers" do
+        expect(delayed_layer.exists?(type, hash)).to be true
       end
     end
 
     context "when the file doesn't exist" do
-      before { Dis::Storage.layers << layer }
+      before { described_class.layers << layer }
 
-      it 'should raise an error' do
+      it "raises an error" do
         expect do
-          Dis::Storage.change_type(type, new_type, hash)
+          described_class.change_type(type, new_type, hash)
         end.to raise_error(Dis::Errors::NotFoundError)
       end
     end
   end
 
-  describe '.delayed_delete' do
+  describe ".delayed_delete" do
     before do
       all_layers.each do |layer|
-        Dis::Storage.layers << layer
+        described_class.layers << layer
         layer.send(:store!, type, hash, file)
       end
-      Dis::Storage.delayed_delete(type, hash)
+      described_class.delayed_delete(type, hash)
     end
-    before {}
 
-    it 'should delete the file from delayed layers' do
+    it "deletes the file from delayed layers" do
       expect(delayed_layer.exists?(type, hash)).to be false
     end
 
-    it 'should not delete the file from immediate layers' do
+    it "does not delete the file from immediate layers" do
       expect(layer.exists?(type, hash)).to be true
     end
 
-    it 'should not delete the file from readonly layers' do
+    it "does not delete the file from readonly layers" do
       expect(readonly_layer.exists?(type, hash)).to be true
     end
   end

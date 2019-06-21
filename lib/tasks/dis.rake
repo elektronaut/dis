@@ -1,15 +1,15 @@
-# encoding: utf-8
+# frozen_string_literal: true
 
 namespace :dis do
-  desc 'Check stuff'
+  desc "Check stuff"
   task consistency_check: :environment do
-    unless ENV['MODELS']
+    unless ENV["MODELS"]
       puts "Usage: #{$PROGRAM_NAME} dis:consistency_check " \
-           'MODELS=Avatar,Document'
+           "MODELS=Avatar,Document"
       exit
     end
 
-    models = ENV['MODELS'].split(',').map(&:strip).map(&:constantize)
+    models = ENV["MODELS"].split(",").map(&:strip).map(&:constantize)
 
     jobs = Set.new
 
@@ -52,7 +52,7 @@ namespace :dis do
       print "#{jobs.length} objects can be transferred to delayed layers, " \
             "queue now? (y/n) "
       response = STDIN.gets.chomp
-      if response =~ /^y/i
+      if /^y/i.match?(response)
         puts "Queueing jobs..."
         jobs.each { |type, hash| Dis::Jobs::Store.perform_later(type, hash) }
       end

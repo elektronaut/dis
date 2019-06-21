@@ -1,4 +1,4 @@
-# encoding: utf-8
+# frozen_string_literal: true
 
 module Dis
   module Model
@@ -26,7 +26,7 @@ module Dis
 
       # Returns the data as a binary string.
       def read
-        @cached ||= read_from(closest)
+        @read ||= read_from(closest)
       end
 
       # Will be true if data has been explicitely set.
@@ -60,6 +60,7 @@ module Dis
       # Stores the data. Returns a hash of the content for reference.
       def store!
         raise Dis::Errors::NoDataError unless raw?
+
         Dis::Storage.store(storage_type, raw)
       end
 
@@ -83,6 +84,7 @@ module Dis
 
       def read_from(object)
         return nil unless object
+
         if object.respond_to?(:body)
           object.body
         elsif object.respond_to?(:read)
@@ -104,7 +106,7 @@ module Dis
       end
 
       def stored?
-        @record.dis_stored? && !content_hash.blank?
+        @record.dis_stored? && content_hash.present?
       end
 
       def stored

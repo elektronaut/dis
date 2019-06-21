@@ -1,4 +1,4 @@
-# encoding: utf-8
+# frozen_string_literal: true
 
 module Dis
   # = Dis Storage
@@ -107,9 +107,7 @@ module Dis
             fetch_count += 1
             layer.get(type, key)
           end.call
-        end
-
-        raise Dis::Errors::NotFoundError unless result
+        end || raise(Dis::Errors::NotFoundError)
 
         store_immediately!(type, result) if fetch_count > 1
         result

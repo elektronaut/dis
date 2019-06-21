@@ -1,7 +1,7 @@
-# encoding: utf-8
+# frozen_string_literal: true
 
-require 'dis/model/class_methods'
-require 'dis/model/data'
+require "dis/model/class_methods"
+require "dis/model/data"
 
 module Dis
   # = Dis Model
@@ -103,7 +103,7 @@ module Dis
     # <tt>content_hash</tt> to nil.
     def data=(raw_data)
       new_data = Dis::Model::Data.new(self, raw_data)
-      attribute_will_change!('data') unless new_data == dis_data
+      attribute_will_change!("data") unless new_data == dis_data
       @dis_data = new_data
       dis_set :content_hash, if raw_data.nil?
                                nil
@@ -115,7 +115,7 @@ module Dis
 
     # Returns true if the data has been changed since the object was last saved.
     def data_changed?
-      changes.include?('data')
+      changes.include?("data")
     end
 
     def dis_stored?
@@ -135,6 +135,7 @@ module Dis
 
     def cleanup_data
       return if @previous_content_hash.blank?
+
       dis_data.expire(@previous_content_hash)
       @previous_content_hash = nil
     end
@@ -167,7 +168,7 @@ module Dis
 
     # We don't want the data column when doing a partial write.
     def keys_for_partial_write
-      super.reject { |a| a == 'data' }
+      super.reject { |a| a == "data" }
     end
   end
 end

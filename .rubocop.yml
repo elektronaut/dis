@@ -1,10 +1,38 @@
+require: rubocop-rspec
+
 AllCops:
+  TargetRubyVersion: 2.4
   Exclude:
     - 'spec/internal/config/**/*'
     - 'spec/internal/db/**/*'
+    - 'spec/internal/db/schema.rb'
 
 Rails:
   Enabled: true
 
+Rails/ApplicationJob:
+  Enabled: false
+
+StringLiterals:
+  EnforcedStyle: double_quotes
+
 Style/Documentation:
   Enabled: false
+
+Metrics/BlockLength:
+  ExcludedMethods:
+    - "included"
+  Exclude:
+    - "*.gemspec"
+    - "**/*.rake"
+    - "**/*.builder"
+    - "spec/internal/config/environments/*"
+    - "config/routes.rb"
+    - "db/migrate/*"
+    - "**/*_spec.rb"
+    - "spec/factories.rb"
+    - "spec/rails_helper.rb"
+
+Metrics/MethodLength:
+  Exclude:
+    - "db/migrate/*"

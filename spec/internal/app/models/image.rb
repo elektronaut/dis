@@ -1,6 +1,6 @@
-# encoding: utf-8
+# frozen_string_literal: true
 
-class Image < ActiveRecord::Base
+class Image < ApplicationRecord
   include Dis::Model
   attr_accessor :accept
   validates :accept, presence: true

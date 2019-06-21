@@ -1,4 +1,4 @@
-# encoding: utf-8
+# frozen_string_literal: true
 
 module Dis
   # = Dis Layer
@@ -94,6 +94,7 @@ module Dis
     # is readonly.
     def store(type, key, file)
       raise Dis::Errors::ReadOnlyError if readonly?
+
       store!(type, key, file)
     end
 
@@ -115,8 +116,7 @@ module Dis
     #
     #    layer.exists?("documents", key)
     def exists?(type, key)
-      if directory(type, key) &&
-         directory(type, key).files.head(key_component(type, key))
+      if directory(type, key)&.files&.head(key_component(type, key))
         true
       else
         false
@@ -129,6 +129,7 @@ module Dis
     def get(type, key)
       dir = directory(type, key)
       return unless dir
+
       dir.files.get(key_component(type, key))
     end
 
@@ -140,6 +141,7 @@ module Dis
     # Raises an error if the layer is readonly.
     def delete(type, key)
       raise Dis::Errors::ReadOnlyError if readonly?
+
       delete!(type, key)
     end
 
@@ -157,15 +159,16 @@ module Dis
     end
 
     def directory_component(_type, _key)
-      path || ''
+      path || ""
     end
 
     def key_component(type, key)
-      [type, key[0...2], key[2..key.length]].compact.join('/')
+      [type, key[0...2], key[2..key.length]].compact.join("/")
     end
 
     def delete!(type, key)
       return false unless exists?(type, key)
+
       get(type, key).destroy
     end
 
@@ -176,7 +179,7 @@ module Dis
     def directory!(type, key)
       dir = directory(type, key)
       dir ||= connection.directories.create(
-        key:    directory_component(type, key),
+        key: directory_component(type, key),
         public: public?
       )
       dir
@@ -184,16 +187,17 @@ module Dis
 
     def store!(type, key, file)
       return get(type, key) if exists?(type, key)
+
       file.rewind if file.respond_to?(:rewind)
       directory!(type, key).files.create(
-        key:    key_component(type, key),
-        body:   (file.is_a?(Fog::Model) ? file.body : file),
+        key: key_component(type, key),
+        body: (file.is_a?(Fog::Model) ? file.body : file),
         public: public?
       )
     end
 
     def path
-      @path && !@path.empty? ? @path : nil
+      @path.presence
     end
   end
 end

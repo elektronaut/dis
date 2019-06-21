@@ -17,7 +17,7 @@ your own on. If you're looking to handle image uploads, check out
 [DynamicImage](https://github.com/elektronaut/dynamic_image). It's
 built on top of Dis and handles resizing, cropping and more on demand.
 
-Requires Rails 4.2+.
+Requires Rails 5+
 
 ## Layers
 

@@ -1,17 +1,17 @@
-# encoding: utf-8
+# frozen_string_literal: true
 
-require 'spec_helper'
+require "spec_helper"
 
 describe Dis::Model do
-  let(:hash) { '8843d7f92416211de9ebb963ff4ce28125932878' }
-  let(:content_type) { 'text/plain' }
-  let(:filename) { 'file.txt' }
-  let(:root_path) { Rails.root.join('tmp', 'spec') }
-  let(:file_path) { '../../support/fixtures/file.txt' }
+  let(:hash) { "8843d7f92416211de9ebb963ff4ce28125932878" }
+  let(:content_type) { "text/plain" }
+  let(:filename) { "file.txt" }
+  let(:root_path) { Rails.root.join("tmp", "spec") }
+  let(:file_path) { "../../support/fixtures/file.txt" }
   let(:file) { File.open(File.expand_path(file_path, __FILE__)) }
   let(:uploaded_file) { Rack::Test::UploadedFile.new(file, content_type) }
   let(:connection) do
-    Fog::Storage.new(provider: 'Local', local_root: root_path)
+    Fog::Storage.new(provider: "Local", local_root: root_path)
   end
   let(:layer) { Dis::Layer.new(connection) }
 
@@ -24,231 +24,252 @@ describe Dis::Model do
     Dis::Storage.layers.clear!
   end
 
-  describe '#data' do
-    context 'when loading from the store' do
+  describe "#data" do
+    context "when loading from the store" do
       let(:existing_image) { Image.create(data: uploaded_file, accept: true) }
       let(:image) { Image.find(existing_image.id) }
-      it 'should return the content' do
-        expect(image.data).to eq('foobar')
+
+      it "returns the content" do
+        expect(image.data).to eq("foobar")
       end
     end
 
-    context 'when data is set' do
+    context "when data is set" do
       let(:image) { Image.new(data: uploaded_file) }
-      it 'should return the content' do
-        expect(image.data).to eq('foobar')
+
+      it "returns the content" do
+        expect(image.data).to eq("foobar")
       end
     end
 
     context "when data isn't set" do
       let(:image) { Image.new }
-      it 'should return nil' do
+
+      it "returns nil" do
         expect(image.data).to be nil
       end
     end
   end
 
-  describe '#data=' do
+  describe "#data=" do
     let(:image) { Image.new }
+
     before { image.data = uploaded_file }
 
-    it 'should set the content length' do
+    it "sets the content length" do
       expect(image.content_length).to eq(6)
     end
 
-    it 'should set the content hash' do
+    it "sets the content hash" do
       expect(image.content_hash).to eq(hash)
     end
 
-    it 'should not store the file' do
-      expect(layer.exists?('images', hash)).to be false
+    it "does not store the file" do
+      expect(layer.exists?("images", hash)).to be false
     end
   end
 
-  describe '#data_changed?' do
-    let(:image) { Image.new }
+  describe "#data_changed?" do
     subject { image.data_changed? }
 
-    context 'with no changes' do
+    let(:image) { Image.new }
+
+    context "with no changes" do
       it { is_expected.to be false }
     end
 
-    context 'when attribute is being set' do
+    context "when attribute is being set" do
       let(:image) { Image.new(data: uploaded_file) }
+
       it { is_expected.to be true }
     end
 
-    context 'when the object has been persisted' do
+    context "when the data changes" do
       let(:existing_image) { Image.create(file: uploaded_file, accept: true) }
       let(:image) { Image.find(existing_image.id) }
 
-      context 'and the data is the same' do
-        before { image.data = uploaded_file }
-        it { is_expected.to be false }
-      end
+      before { image.data = "new" }
 
-      context 'and the data changes' do
-        before { image.data = 'new' }
-        it { is_expected.to be true }
-      end
+      it { is_expected.to be true }
+    end
+
+    context "when the data changes to the same file" do
+      let(:existing_image) { Image.create(file: uploaded_file, accept: true) }
+      let(:image) { Image.find(existing_image.id) }
+
+      before { image.data = uploaded_file }
+
+      it { is_expected.to be false }
     end
   end
 
-  describe '#data?' do
-    let(:image) { Image.new }
+  describe "#data?" do
     subject(:result) { image.data? }
 
+    let(:image) { Image.new }
+
     context "when data hasn't been set" do
-      it 'should be false' do
+      it "is false" do
         expect(result).to be false
       end
     end
 
-    context 'when data has been set' do
+    context "when data has been set" do
       before { image.data = uploaded_file }
-      it 'should be true' do
+
+      it "is true" do
         expect(result).to be true
       end
     end
 
-    context 'when the object has been saved' do
+    context "when the object has been saved" do
       let(:existing_image) { Image.create(data: uploaded_file, accept: true) }
       let(:image) { Image.find(existing_image.id) }
-      it 'should be true' do
+
+      it "is true" do
         expect(result).to be true
       end
     end
 
-    context 'when the object has been saved, but data has been set to nil' do
+    context "when the object has been saved, but data has been set to nil" do
       let(:existing_image) { Image.create(data: uploaded_file, accept: true) }
       let(:image) { Image.find(existing_image.id) }
+
       before { image.data = nil }
-      it 'should be true' do
+
+      it "is true" do
         expect(result).to be false
       end
     end
   end
 
-  describe '#file=' do
+  describe "#file=" do
     let(:image) { Image.new }
 
-    context 'with an uploaded file' do
+    context "with an uploaded file" do
       before { image.file = uploaded_file }
 
-      it 'should set the filename' do
+      it "sets the filename" do
         expect(image.filename).to eq(filename)
       end
 
-      it 'should set the content type' do
+      it "sets the content type" do
         expect(image.content_type).to eq(content_type)
       end
 
-      it 'should set the content length' do
+      it "sets the content length" do
         expect(image.content_length).to eq(6)
       end
 
-      it 'should not store the file' do
-        expect(layer.exists?('images', hash)).to be false
+      it "does not store the file" do
+        expect(layer.exists?("images", hash)).to be false
       end
     end
   end
 
-  describe 'storage callback' do
-    context 'when object is invalid' do
-      let!(:image) { Image.create(data: uploaded_file) }
+  describe "storage callback" do
+    let(:image) { Image.create(data: uploaded_file, accept: true) }
+    let(:new_hash) { "aa1d7eef5b608ac42d09af74bb012bb29c9c57dd" }
+    let(:new_file_path) { "../../support/fixtures/other_file.txt" }
+    let(:new_file) { File.open(File.expand_path(new_file_path, __FILE__)) }
+    let(:new_uploaded_file) do
+      Rack::Test::UploadedFile.new(new_file, content_type)
+    end
 
-      it 'should not store the file' do
-        expect(layer.exists?('images', hash)).to be false
+    context "when object is invalid" do
+      let(:image) { Image.create(data: uploaded_file) }
+
+      it "does not store the file" do
+        expect(layer.exists?("images", hash)).to be false
       end
     end
 
-    context 'when object is valid' do
-      let!(:image) { Image.create(data: uploaded_file, accept: true) }
+    context "when object is valid" do
+      before { image }
 
-      it 'should update the content hash' do
+      it "updates the content hash" do
         expect(image.content_hash).to eq(hash)
       end
 
-      it 'should store the file' do
-        expect(layer.exists?('images', hash)).to be true
+      it "stores the file" do
+        expect(layer.exists?("images", hash)).to be true
       end
     end
 
-    context 'when data changes to nil' do
-      let!(:image) { Image.create(data: uploaded_file, accept: true) }
+    context "when data changes to nil" do
       before { image.update(data: nil, accept: true) }
 
-      it 'should remove the old file' do
-        expect(layer.exists?('images', hash)).to be false
+      it "removes the old file" do
+        expect(layer.exists?("images", hash)).to be false
       end
 
-      it 'should be nil when reloaded' do
+      it "is nil when reloaded" do
         expect(Image.find(image.id).data).to be nil
       end
     end
 
-    context 'when data changes to a new file' do
-      let(:new_hash) { 'aa1d7eef5b608ac42d09af74bb012bb29c9c57dd' }
-      let(:new_file_path) { '../../support/fixtures/other_file.txt' }
-      let(:new_file) { File.open(File.expand_path(new_file_path, __FILE__)) }
-      let(:new_uploaded_file) do
-        Rack::Test::UploadedFile.new(new_file, content_type)
-      end
-      let!(:image) { Image.create(data: uploaded_file, accept: true) }
+    context "when data changes to a new file" do
+      before { image.update(data: new_uploaded_file, accept: true) }
 
-      context 'and the object is valid' do
-        before { image.update(data: new_uploaded_file, accept: true) }
-
-        it 'should store the new file' do
-          expect(layer.exists?('images', new_hash)).to be true
-        end
-
-        it 'should remove the old file' do
-          expect(layer.exists?('images', hash)).to be false
-        end
+      it "stores the new file" do
+        expect(layer.exists?("images", new_hash)).to be true
       end
 
-      context 'and the object is not valid' do
-        before { image.update(data: new_uploaded_file, accept: nil) }
+      it "removes the old file" do
+        expect(layer.exists?("images", hash)).to be false
+      end
+    end
 
-        it 'should not store the new file' do
-          expect(image.valid?).to be false
-          expect(layer.exists?('images', new_hash)).to be false
-        end
+    context "when the record is invalid" do
+      before { image.update(data: new_uploaded_file, accept: nil) }
 
-        it 'should not remove the old file' do
-          expect(layer.exists?('images', hash)).to be true
-        end
+      it "is invalidated" do
+        expect(image.valid?).to be false
       end
 
-      context 'when another record exists' do
-        before { Image.create(data: uploaded_file, accept: true) }
-        before { image.update(data: new_uploaded_file, accept: true) }
+      it "does not store the new file" do
+        expect(layer.exists?("images", new_hash)).to be false
+      end
 
-        it 'should not remove the old file' do
-          expect(layer.exists?('images', hash)).to be true
-        end
+      it "does not remove the old file" do
+        expect(layer.exists?("images", hash)).to be true
+      end
+    end
+
+    context "when another record exists" do
+      before do
+        Image.create(data: uploaded_file, accept: true)
+        image.update(data: new_uploaded_file, accept: true)
+      end
+
+      it "does not remove the old file" do
+        expect(layer.exists?("images", hash)).to be true
       end
     end
   end
 
-  describe 'delete callback' do
-    context 'when duplicates exist' do
-      let!(:image) { Image.create(data: uploaded_file, accept: true) }
-      let!(:other_image) { Image.create(data: uploaded_file, accept: true) }
-      before { image.destroy }
+  describe "delete callback" do
+    context "when duplicates exist" do
+      let(:image) { Image.create(data: uploaded_file, accept: true) }
+      let(:other_image) { Image.create(data: uploaded_file, accept: true) }
 
-      it 'should not remove the file' do
-        expect(layer.exists?('images', hash)).to be true
+      before do
+        other_image
+        image.destroy
+      end
+
+      it "does not remove the file" do
+        expect(layer.exists?("images", hash)).to be true
       end
     end
 
-    context 'when no duplicates exist' do
-      let!(:image) { Image.create(data: uploaded_file, accept: true) }
+    context "when no duplicates exist" do
+      let(:image) { Image.create(data: uploaded_file, accept: true) }
+
       before { image.destroy }
 
-      it 'should remove the file' do
-        expect(layer.exists?('images', hash)).to be false
+      it "removes the file" do
+        expect(layer.exists?("images", hash)).to be false
       end
     end
   end

@@ -1,12 +1,12 @@
-# encoding: utf-8
+# frozen_string_literal: true
 
-require 'rails/generators'
-require 'rails/generators/rails/model/model_generator'
+require "rails/generators"
+require "rails/generators/rails/model/model_generator"
 
 module Dis
   module Generators
     class ModelGenerator < Rails::Generators::ModelGenerator
-      desc 'Creates a Dis model'
+      desc "Creates a Dis model"
 
       def initialize(args, *options)
         super(inject_dis_attributes(args), *options)
@@ -14,7 +14,7 @@ module Dis
 
       def add_model_extension
         inject_into_file(
-          File.join('app/models', class_path, "#{file_name}.rb"),
+          File.join("app/models", class_path, "#{file_name}.rb"),
           after: "ActiveRecord::Base\n"
         ) do
           "  include Dis::Model\n"
@@ -32,12 +32,12 @@ module Dis
       end
 
       def dis_attributes
-        %w(
+        %w[
           content_hash:string
           content_type:string
           content_length:integer
           filename:string
-        )
+        ]
       end
     end
   end
