@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
   s.add_dependency "fog-core", "~> 2.1.2"
   s.add_dependency "fog-local"
   s.add_dependency "pmap", "~> 1.1.0"
-  s.add_dependency "rails", "~> 5.0"
+  s.add_dependency "rails", "> 5.0"
 
   s.add_development_dependency "rspec-rails", "~> 3.5"
   s.add_development_dependency "sqlite3"
