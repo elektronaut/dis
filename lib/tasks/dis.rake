@@ -17,10 +17,7 @@ namespace :dis do
       puts "-- #{model.name} --"
 
       content_hash_attr = model.dis_attributes[:content_hash]
-      objects = model
-                .select(content_hash_attr)
-                .uniq
-                .map { |r| r.send(content_hash_attr) }
+      objects = model.pluck(content_hash_attr).uniq
       global_missing = objects.dup
 
       puts "Unique objects: #{objects.length}"
@@ -31,9 +28,10 @@ namespace :dis do
         existing = layer.existing(model.dis_type, objects)
         missing = objects - existing
         global_missing -= existing
-        puts "#{existing.length} existing, #{missing.length} missing"
+        puts "#{existing.length} existing, #{missing.length} missing" +
+             (layer.readonly? ? " (read-only)" : "")
 
-        next unless layer.delayed?
+        next unless layer.delayed? && !layer.readonly?
 
         jobs += (missing - global_missing).pmap do |hash|
           [model.dis_type, hash]
