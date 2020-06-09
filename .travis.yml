@@ -11,5 +11,3 @@ script:
 before_script:
   - bundle exec rake app:db:create
   - bundle exec rake app:db:schema:load
-after_script:
-  - CODECLIMATE_REPO_TOKEN=75d1da76d5a205a703da8a9c13c7147bec4bd765dbb1195d85664f424b51cbf1 bundle exec codeclimate-test-reporter
