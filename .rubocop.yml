@@ -1,6 +1,7 @@
 require: rubocop-rspec
 
 AllCops:
+  NewCops: enable
   TargetRubyVersion: 2.4
   Exclude:
     - 'spec/internal/config/**/*'
@@ -10,14 +11,15 @@ AllCops:
 Rails:
   Enabled: true
 
-Rails/ApplicationJob:
-  Enabled: false
-
 StringLiterals:
   EnforcedStyle: double_quotes
 
 Style/Documentation:
   Enabled: false
+
+Layout/LineLength:
+  AutoCorrect: true
+  Max: 80
 
 Metrics/BlockLength:
   ExcludedMethods:

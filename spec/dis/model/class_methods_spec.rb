@@ -3,10 +3,13 @@
 require "spec_helper"
 
 describe Dis::Model::ClassMethods do
-  class WithCustomAttributes < ApplicationRecord
-    include Dis::Model
-    self.dis_attributes = { filename: :uploaded_filename, content_type: :type }
-    self.dis_type = "custom"
+  let(:with_custom_attributes) do
+    Class.new(ApplicationRecord) do
+      include Dis::Model
+      self.dis_attributes = { filename: :uploaded_filename,
+                              content_type: :type }
+      self.dis_type = "custom"
+    end
   end
 
   describe ".dis_attributes" do
@@ -24,7 +27,7 @@ describe Dis::Model::ClassMethods do
     end
 
     context "with custom attributes" do
-      let(:model) { WithCustomAttributes }
+      let(:model) { with_custom_attributes }
 
       it "returns the attributes" do
         expect(attributes).to eq(content_hash: :content_hash,
@@ -47,7 +50,7 @@ describe Dis::Model::ClassMethods do
     end
 
     context "with custom attributes" do
-      let(:model) { WithCustomAttributes }
+      let(:model) { with_custom_attributes }
 
       it "returns the type" do
         expect(type).to eq("custom")
