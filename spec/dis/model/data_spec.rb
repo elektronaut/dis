@@ -6,8 +6,9 @@ describe Dis::Model::Data do
   root_path = Rails.root.join("tmp", "spec")
 
   let(:hash) { "8843d7f92416211de9ebb963ff4ce28125932878" }
-  let(:file_path) { "../../../support/fixtures/file.txt" }
-  let(:file) { File.open(File.expand_path(file_path, __FILE__)) }
+  let(:file) do
+    File.open(File.expand_path("../../support/fixtures/file.txt", __dir__))
+  end
   let(:uploaded_file) { Rack::Test::UploadedFile.new(file, "text/plain") }
   let(:image) { Image.new }
   let(:data) { described_class.new(image) }
@@ -51,8 +52,9 @@ describe Dis::Model::Data do
     end
 
     context "with stored data" do
-      let(:existing_image) { Image.create(data: uploaded_file, accept: true) }
-      let(:image) { Image.find(existing_image.id) }
+      let(:image) do
+        Image.find(Image.create(data: uploaded_file, accept: true).id)
+      end
 
       it { is_expected.to eq("foobar") }
     end

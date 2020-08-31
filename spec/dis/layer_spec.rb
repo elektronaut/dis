@@ -3,14 +3,14 @@
 require "spec_helper"
 
 describe Dis::Layer do
-  let(:type) { "test_files" }
   let(:root_path) { Rails.root.join("tmp", "spec") }
   let(:target_path) do
-    root_path.join(type, "88", "43d7f92416211de9ebb963ff4ce28125932878")
+    root_path.join("test_files", "88", "43d7f92416211de9ebb963ff4ce28125932878")
   end
   let(:hash) { "8843d7f92416211de9ebb963ff4ce28125932878" }
-  let(:file_path) { "../../support/fixtures/file.txt" }
-  let(:file) { File.open(File.expand_path(file_path, __FILE__)) }
+  let(:file) do
+    File.open(File.expand_path("../support/fixtures/file.txt", __dir__))
+  end
   let(:connection) do
     Fog::Storage.new(provider: "Local", local_root: root_path)
   end
@@ -99,10 +99,10 @@ describe Dis::Layer do
   end
 
   describe "#get" do
-    let(:result) { layer.get(type, hash) }
+    let(:result) { layer.get("test_files", hash) }
 
     context "when the file exists" do
-      before { layer.store(type, hash, file) }
+      before { layer.store("test_files", hash, file) }
 
       it "returns a Fog::Model" do
         expect(result).to be_a(Fog::Model)
@@ -120,7 +120,7 @@ describe Dis::Layer do
     end
 
     context "when the file doesn't exist, but the path does" do
-      before { FileUtils.mkdir_p(root_path.join(type, "88")) }
+      before { FileUtils.mkdir_p(root_path.join("test_files", "88")) }
 
       it "returns nil" do
         expect(result).to be_nil
@@ -129,20 +129,20 @@ describe Dis::Layer do
   end
 
   describe "#existing" do
-    subject { layer.existing(type, keys) }
+    subject { layer.existing("test_files", keys) }
 
     let(:keys) { [hash, "a655c388fceaf194657339c3242562de66c2d102"] }
 
-    before { layer.store(type, hash, file) }
+    before { layer.store("test_files", hash, file) }
 
     it { is_expected.to eq([hash]) }
   end
 
   describe "#exists?" do
-    subject { layer.exists?(type, hash) }
+    subject { layer.exists?("test_files", hash) }
 
     context "when the file exists" do
-      before { layer.store(type, hash, file) }
+      before { layer.store("test_files", hash, file) }
 
       it { is_expected.to be true }
     end
@@ -153,7 +153,7 @@ describe Dis::Layer do
   end
 
   describe "#store" do
-    let(:result) { layer.store(type, hash, file) }
+    let(:result) { layer.store("test_files", hash, file) }
 
     context "with a file" do
       before { result }
@@ -175,11 +175,11 @@ describe Dis::Layer do
       let(:layer) { described_class.new(connection, path: "mypath") }
       let(:target_path) do
         root_path.join("mypath",
-                       type,
+                       "test_files",
                        "88",
                        "43d7f92416211de9ebb963ff4ce28125932878")
       end
-      let!(:result) { layer.store(type, hash, file) }
+      let!(:result) { layer.store("test_files", hash, file) }
 
       it "returns the file" do
         expect(result).to be_a(Fog::Model)
@@ -199,7 +199,7 @@ describe Dis::Layer do
     end
 
     context "when the file already exists" do
-      before { layer.store(type, hash, file) }
+      before { layer.store("test_files", hash, file) }
 
       it "returns the file" do
         expect(result).to be_a(Fog::Model)
@@ -216,12 +216,12 @@ describe Dis::Layer do
   end
 
   describe "#delete" do
-    let(:result) { layer.delete(type, hash) }
+    let(:result) { layer.delete("test_files", hash) }
 
     context "when the file exists" do
-      before { layer.store(type, hash, file) }
+      before { layer.store("test_files", hash, file) }
 
-      let!(:result) { layer.delete(type, hash) }
+      let!(:result) { layer.delete("test_files", hash) }
 
       it "returns true" do
         expect(result).to be true

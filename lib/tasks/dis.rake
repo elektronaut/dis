@@ -49,7 +49,7 @@ namespace :dis do
     if jobs.any?
       print "#{jobs.length} objects can be transferred to delayed layers, " \
             "queue now? (y/n) "
-      response = STDIN.gets.chomp
+      response = $stdin.gets.chomp
       if /^y/i.match?(response)
         puts "Queueing jobs..."
         jobs.each { |type, hash| Dis::Jobs::Store.perform_later(type, hash) }

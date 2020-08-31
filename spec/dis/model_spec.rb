@@ -4,16 +4,16 @@ require "spec_helper"
 
 describe Dis::Model do
   let(:hash) { "8843d7f92416211de9ebb963ff4ce28125932878" }
-  let(:content_type) { "text/plain" }
-  let(:filename) { "file.txt" }
   let(:root_path) { Rails.root.join("tmp", "spec") }
-  let(:file_path) { "../../support/fixtures/file.txt" }
-  let(:file) { File.open(File.expand_path(file_path, __FILE__)) }
-  let(:uploaded_file) { Rack::Test::UploadedFile.new(file, content_type) }
-  let(:connection) do
-    Fog::Storage.new(provider: "Local", local_root: root_path)
+  let(:uploaded_file) do
+    Rack::Test::UploadedFile.new(
+      File.open(File.expand_path("../support/fixtures/file.txt", __dir__)),
+      "text/plain"
+    )
   end
-  let(:layer) { Dis::Layer.new(connection) }
+  let(:layer) do
+    Dis::Layer.new(Fog::Storage.new(provider: "Local", local_root: root_path))
+  end
 
   before do
     Dis::Storage.layers << layer
@@ -26,8 +26,9 @@ describe Dis::Model do
 
   describe "#data" do
     context "when loading from the store" do
-      let(:existing_image) { Image.create(data: uploaded_file, accept: true) }
-      let(:image) { Image.find(existing_image.id) }
+      let(:image) do
+        Image.find(Image.create(data: uploaded_file, accept: true).id)
+      end
 
       it "returns the content" do
         expect(image.data).to eq("foobar")
@@ -85,8 +86,9 @@ describe Dis::Model do
     end
 
     context "when the data changes" do
-      let(:existing_image) { Image.create(file: uploaded_file, accept: true) }
-      let(:image) { Image.find(existing_image.id) }
+      let(:image) do
+        Image.find(Image.create(file: uploaded_file, accept: true).id)
+      end
 
       before { image.data = "new" }
 
@@ -94,8 +96,9 @@ describe Dis::Model do
     end
 
     context "when the data changes to the same file" do
-      let(:existing_image) { Image.create(file: uploaded_file, accept: true) }
-      let(:image) { Image.find(existing_image.id) }
+      let(:image) do
+        Image.find(Image.create(file: uploaded_file, accept: true).id)
+      end
 
       before { image.data = uploaded_file }
 
@@ -123,8 +126,9 @@ describe Dis::Model do
     end
 
     context "when the object has been saved" do
-      let(:existing_image) { Image.create(data: uploaded_file, accept: true) }
-      let(:image) { Image.find(existing_image.id) }
+      let(:image) do
+        Image.find(Image.create(data: uploaded_file, accept: true).id)
+      end
 
       it "is true" do
         expect(result).to be true
@@ -132,8 +136,9 @@ describe Dis::Model do
     end
 
     context "when the object has been saved, but data has been set to nil" do
-      let(:existing_image) { Image.create(data: uploaded_file, accept: true) }
-      let(:image) { Image.find(existing_image.id) }
+      let(:image) do
+        Image.find(Image.create(data: uploaded_file, accept: true).id)
+      end
 
       before { image.data = nil }
 
@@ -150,11 +155,11 @@ describe Dis::Model do
       before { image.file = uploaded_file }
 
       it "sets the filename" do
-        expect(image.filename).to eq(filename)
+        expect(image.filename).to eq("file.txt")
       end
 
       it "sets the content type" do
-        expect(image.content_type).to eq(content_type)
+        expect(image.content_type).to eq("text/plain")
       end
 
       it "sets the content length" do
@@ -173,7 +178,7 @@ describe Dis::Model do
     let(:new_file_path) { "../../support/fixtures/other_file.txt" }
     let(:new_file) { File.open(File.expand_path(new_file_path, __FILE__)) }
     let(:new_uploaded_file) do
-      Rack::Test::UploadedFile.new(new_file, content_type)
+      Rack::Test::UploadedFile.new(new_file, "text/plain")
     end
 
     context "when object is invalid" do
@@ -251,10 +256,9 @@ describe Dis::Model do
   describe "delete callback" do
     context "when duplicates exist" do
       let(:image) { Image.create(data: uploaded_file, accept: true) }
-      let(:other_image) { Image.create(data: uploaded_file, accept: true) }
 
       before do
-        other_image
+        Image.create(data: uploaded_file, accept: true)
         image.destroy
       end
 

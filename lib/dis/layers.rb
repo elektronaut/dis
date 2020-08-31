@@ -22,8 +22,8 @@ module Dis
     end
 
     # Iterates over the layers.
-    def each
-      @layers.each { |layer| yield layer }
+    def each(&block)
+      @layers.each { |layer| block.call(layer) }
     end
 
     # Returns a new instance containing only the delayed layers.

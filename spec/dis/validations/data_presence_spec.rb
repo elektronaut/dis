@@ -7,17 +7,19 @@ describe Dis::Validations::DataPresence do
 
   let(:hash) { "8843d7f92416211de9ebb963ff4ce28125932878" }
   let(:root_path) { Rails.root.join("tmp", "spec") }
-  let(:file_path) { "../../../support/fixtures/file.txt" }
-  let(:file) { File.open(File.expand_path(file_path, __FILE__)) }
-  let(:uploaded_file) { Rack::Test::UploadedFile.new(file, "text/plain") }
-  let(:image) { ImageWithValidations.new }
-  let(:layer) do
-    Dis::Layer.new(Fog::Storage.new(provider: "Local", local_root: root_path))
+  let(:uploaded_file) do
+    Rack::Test::UploadedFile.new(
+      File.open(File.expand_path("../../support/fixtures/file.txt", __dir__)),
+      "text/plain"
+    )
   end
+  let(:image) { ImageWithValidations.new }
 
   before do
     Dis::Storage.layers.clear!
-    Dis::Storage.layers << layer
+    Dis::Storage.layers << Dis::Layer.new(
+      Fog::Storage.new(provider: "Local", local_root: root_path)
+    )
     image.valid?
   end
 
