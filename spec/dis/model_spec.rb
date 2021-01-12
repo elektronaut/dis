@@ -4,7 +4,7 @@ require "spec_helper"
 
 describe Dis::Model do
   let(:hash) { "8843d7f92416211de9ebb963ff4ce28125932878" }
-  let(:root_path) { Rails.root.join("tmp", "spec") }
+  let(:root_path) { Rails.root.join("tmp/spec") }
   let(:uploaded_file) do
     Rack::Test::UploadedFile.new(
       File.open(File.expand_path("../support/fixtures/file.txt", __dir__)),

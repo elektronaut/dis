@@ -3,7 +3,7 @@
 require "spec_helper"
 
 describe Dis::Layer do
-  let(:root_path) { Rails.root.join("tmp", "spec") }
+  let(:root_path) { Rails.root.join("tmp/spec") }
   let(:target_path) do
     root_path.join("test_files", "88", "43d7f92416211de9ebb963ff4ce28125932878")
   end

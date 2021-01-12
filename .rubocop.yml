@@ -1,6 +1,8 @@
 inherit_from: .rubocop_todo.yml
 
-require: rubocop-rspec
+require:
+  - rubocop-rails
+  - rubocop-rspec
 
 AllCops:
   NewCops: enable
@@ -25,7 +27,7 @@ Layout/LineLength:
   Max: 80
 
 Metrics/BlockLength:
-  ExcludedMethods:
+  IgnoredMethods:
     - "included"
   Exclude:
     - "*.gemspec"
@@ -41,3 +43,6 @@ Metrics/BlockLength:
 Metrics/MethodLength:
   Exclude:
     - "db/migrate/*"
+
+Rails/ApplicationJob:
+  Enabled: false

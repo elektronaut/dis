@@ -4,7 +4,7 @@ require "spec_helper"
 
 describe Dis::Storage do
   let(:type) { "test_files" }
-  let(:root_path) { Rails.root.join("tmp", "spec") }
+  let(:root_path) { Rails.root.join("tmp/spec") }
   let(:hash) { "8843d7f92416211de9ebb963ff4ce28125932878" }
   let(:file) do
     File.open(File.expand_path("../support/fixtures/file.txt", __dir__))

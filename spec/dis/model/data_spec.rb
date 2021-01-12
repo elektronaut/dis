@@ -3,7 +3,7 @@
 require "spec_helper"
 
 describe Dis::Model::Data do
-  root_path = Rails.root.join("tmp", "spec")
+  root_path = Rails.root.join("tmp/spec")
 
   let(:hash) { "8843d7f92416211de9ebb963ff4ce28125932878" }
   let(:file) do
