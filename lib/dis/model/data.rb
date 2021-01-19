@@ -106,14 +106,13 @@ module Dis
       end
 
       def stored?
-        @record.dis_stored? && content_hash.present?
+        content_hash.present? &&
+          (@record.dis_stored? ||
+           Dis::Storage.exists?(storage_type, content_hash))
       end
 
       def stored
-        Dis::Storage.get(
-          storage_type,
-          content_hash
-        )
+        Dis::Storage.get(storage_type, content_hash)
       end
 
       attr_reader :raw

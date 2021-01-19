@@ -43,12 +43,32 @@ describe Dis::Validations::DataPresence do
     it { is_expected.to eq([]) }
   end
 
+  context "when creating with content_hash" do
+    let(:image) do
+      ImageWithValidations.new(content_hash: hash, filename: "file.txt")
+    end
+
+    it { is_expected.to include("can't be blank") }
+  end
+
   context "when data exists in storage" do
     let(:existing_image) do
       ImageWithValidations.create(data: uploaded_file, accept: true)
     end
-    let(:image) { ImageWithValidations.find(existing_image.id) }
 
-    it { is_expected.to eq([]) }
+    context "when finding an existing model" do
+      let(:image) { ImageWithValidations.find(existing_image.id) }
+
+      it { is_expected.to eq([]) }
+    end
+
+    context "when creating with content_hash" do
+      let(:image) do
+        ImageWithValidations.new(content_hash: existing_image.content_hash,
+                                 filename: "file.txt")
+      end
+
+      it { is_expected.to eq([]) }
+    end
   end
 end
