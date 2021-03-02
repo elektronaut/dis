@@ -64,11 +64,15 @@ describe Dis::Validations::DataPresence do
 
     context "when creating with content_hash" do
       let(:image) do
-        ImageWithValidations.new(content_hash: existing_image.content_hash,
-                                 filename: "file.txt")
+        ImageWithValidations.create(content_hash: existing_image.content_hash,
+                                    filename: "file.txt")
       end
 
       it { is_expected.to eq([]) }
+
+      it "foo" do
+        expect(image.data).to eq("foobar")
+      end
     end
   end
 end
