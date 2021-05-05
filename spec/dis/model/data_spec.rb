@@ -167,4 +167,18 @@ describe Dis::Model::Data do
       end
     end
   end
+
+  describe "#tempfile" do
+    subject(:tempfile) { data.tempfile }
+
+    let(:data) { described_class.new(image, uploaded_file) }
+
+    it "contains the data" do
+      expect(tempfile.read).to eq(uploaded_file.read)
+    end
+
+    it "caches the tempfile" do
+      expect(tempfile.path).to eq(data.tempfile.path)
+    end
+  end
 end

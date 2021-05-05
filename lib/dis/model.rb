@@ -131,6 +131,9 @@ module Dis
       dis_set :filename, file.original_filename
     end
 
+    # Returns the data as a temporary file.
+    delegate :tempfile, to: :dis_data
+
     private
 
     def cleanup_data

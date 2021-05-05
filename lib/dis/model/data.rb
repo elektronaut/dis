@@ -64,6 +64,16 @@ module Dis
         Dis::Storage.store(storage_type, raw)
       end
 
+      # Writes the data to a temporary file.
+      def tempfile
+        unless @tempfile
+          @tempfile = Tempfile.new
+          @tempfile.write(@read || read_from(closest))
+          @tempfile.open
+        end
+        @tempfile
+      end
+
       private
 
       def closest
