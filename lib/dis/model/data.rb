@@ -67,7 +67,7 @@ module Dis
       # Writes the data to a temporary file.
       def tempfile
         unless @tempfile
-          @tempfile = Tempfile.new
+          @tempfile = Tempfile.new(binmode: true)
           @tempfile.write(@read || read_from(closest))
           @tempfile.open
         end
