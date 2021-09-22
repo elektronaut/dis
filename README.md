@@ -3,7 +3,7 @@
 [![Code Climate](https://codeclimate.com/github/elektronaut/dis/badges/gpa.svg)](https://codeclimate.com/github/elektronaut/dis)
 [![Code Climate](https://codeclimate.com/github/elektronaut/dis/badges/coverage.svg)](https://codeclimate.com/github/elektronaut/dis)
 [![Inline docs](http://inch-ci.org/github/elektronaut/dis.svg)](http://inch-ci.org/github/elektronaut/dis)
-[![Security](https://hakiri.io/github/elektronaut/dis/master.svg)](https://hakiri.io/github/elektronaut/dis/master)
+[![Security](https://hakiri.io/github/elektronaut/dis/main.svg)](https://hakiri.io/github/elektronaut/dis/main)
 
 # Dis
 
