@@ -48,7 +48,7 @@ describe Dis::Model::Data do
     subject(:result) { data.read }
 
     context "with no data" do
-      it { is_expected.to be nil }
+      it { is_expected.to be_nil }
     end
 
     context "with stored data" do

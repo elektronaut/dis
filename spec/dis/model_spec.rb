@@ -47,7 +47,7 @@ describe Dis::Model do
       let(:image) { Image.new }
 
       it "returns nil" do
-        expect(image.data).to be nil
+        expect(image.data).to be_nil
       end
     end
   end
@@ -209,7 +209,7 @@ describe Dis::Model do
       end
 
       it "is nil when reloaded" do
-        expect(Image.find(image.id).data).to be nil
+        expect(Image.find(image.id).data).to be_nil
       end
     end
 

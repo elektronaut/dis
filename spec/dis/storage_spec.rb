@@ -287,7 +287,7 @@ describe Dis::Storage do
       end
 
       it "returns true" do
-        expect(described_class.delete(type, hash)).to eq(true)
+        expect(described_class.delete(type, hash)).to be(true)
       end
 
       it "enqueues a job" do
@@ -320,7 +320,7 @@ describe Dis::Storage do
       before { described_class.layers << layer }
 
       it "returns false" do
-        expect(described_class.delete(type, hash)).to eq(false)
+        expect(described_class.delete(type, hash)).to be(false)
       end
     end
   end
