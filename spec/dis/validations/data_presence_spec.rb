@@ -24,7 +24,7 @@ describe Dis::Validations::DataPresence do
   end
 
   after do
-    FileUtils.rm_rf(root_path) if File.exist?(root_path)
+    FileUtils.rm_rf(root_path)
   end
 
   context "with no data" do

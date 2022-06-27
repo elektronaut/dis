@@ -16,7 +16,7 @@ describe Dis::Layer do
   end
   let(:layer) { described_class.new(connection) }
 
-  after { FileUtils.rm_rf(root_path) if File.exist?(root_path) }
+  after { FileUtils.rm_rf(root_path) }
 
   describe "#delayed?" do
     subject { layer.delayed? }

@@ -21,7 +21,7 @@ describe Dis::Model::Data do
   end
 
   after do
-    FileUtils.rm_rf(root_path) if File.exist?(root_path)
+    FileUtils.rm_rf(root_path)
   end
 
   describe "#any?" do
