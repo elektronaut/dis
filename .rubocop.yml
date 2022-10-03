@@ -27,8 +27,6 @@ Layout/LineLength:
   Max: 80
 
 Metrics/BlockLength:
-  IgnoredMethods:
-    - "included"
   Exclude:
     - "*.gemspec"
     - "**/*.rake"
