@@ -10,7 +10,10 @@ group :development, :test do
   gem "pry"
   gem "pry-stack_explorer"
 
+  gem "rspec-rails"
   gem "rubocop", require: false
   gem "rubocop-rails", require: false
   gem "rubocop-rspec", require: false
+  gem "simplecov", "~> 0.17.1"
+  gem "sqlite3"
 end
