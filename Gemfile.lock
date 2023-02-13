@@ -133,7 +133,7 @@ GEM
     nokogiri (1.14.1-x86_64-linux)
       racc (~> 1.4)
     parallel (1.22.1)
-    parser (3.2.0.0)
+    parser (3.2.1.0)
       ast (~> 2.4.1)
     pmap (1.1.1)
     pry (0.14.2)
@@ -174,7 +174,7 @@ GEM
       zeitwerk (~> 2.5)
     rainbow (3.1.1)
     rake (13.0.6)
-    regexp_parser (2.6.2)
+    regexp_parser (2.7.0)
     rexml (3.2.5)
     rspec-core (3.12.1)
       rspec-support (~> 3.12.0)
@@ -193,7 +193,7 @@ GEM
       rspec-mocks (~> 3.11)
       rspec-support (~> 3.11)
     rspec-support (3.12.0)
-    rubocop (1.44.1)
+    rubocop (1.45.1)
       json (~> 2.3)
       parallel (~> 1.10)
       parser (>= 3.2.0.0)
@@ -203,8 +203,8 @@ GEM
       rubocop-ast (>= 1.24.1, < 2.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 2.4.0, < 3.0)
-    rubocop-ast (1.24.1)
-      parser (>= 3.1.1.0)
+    rubocop-ast (1.26.0)
+      parser (>= 3.2.1.0)
     rubocop-capybara (2.17.0)
       rubocop (~> 1.41)
     rubocop-rails (2.17.4)
@@ -231,7 +231,7 @@ GEM
     websocket-driver (0.7.5)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
-    zeitwerk (2.6.6)
+    zeitwerk (2.6.7)
 
 PLATFORMS
   arm64-darwin-22
@@ -252,4 +252,4 @@ DEPENDENCIES
   sqlite3
 
 BUNDLED WITH
-   2.4.2
+   2.4.6
