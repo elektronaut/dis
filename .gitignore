@@ -1,5 +1,4 @@
 .bundle/
-.ruby-version
 coverage/
 log/*.log
 pkg/
