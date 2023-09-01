@@ -45,6 +45,8 @@ module Dis
   #     delayed: true
   #   )
   class Layer
+    include Dis::Logging
+
     attr_reader :connection
 
     def initialize(connection, options = {})
@@ -95,7 +97,9 @@ module Dis
     def store(type, key, file)
       raise Dis::Errors::ReadOnlyError if readonly?
 
-      store!(type, key, file)
+      debug_log("Store #{type}/#{key} to #{name}") do
+        store!(type, key, file)
+      end
     end
 
     # Returns all the given keys that exist in the layer.
@@ -130,7 +134,9 @@ module Dis
       dir = directory(type, key)
       return unless dir
 
-      dir.files.get(key_component(type, key))
+      debug_log("Get #{type}/#{key} from #{name}") do
+        dir.files.get(key_component(type, key))
+      end
     end
 
     # Deletes a file from the store.
@@ -142,7 +148,9 @@ module Dis
     def delete(type, key)
       raise Dis::Errors::ReadOnlyError if readonly?
 
-      delete!(type, key)
+      debug_log("Delete #{type}/#{key} from #{name}") do
+        delete!(type, key)
+      end
     end
 
     # Returns a name for the layer.
