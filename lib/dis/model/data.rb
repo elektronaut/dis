@@ -50,6 +50,8 @@ module Dis
       # by existing records. This is triggered from callbacks on the record
       # whenever they are changed or destroyed.
       def expire(hash)
+        return if hash.blank?
+
         unless @record.class.where(
           @record.class.dis_attributes[:content_hash] => hash
         ).any?

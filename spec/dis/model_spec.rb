@@ -276,5 +276,13 @@ describe Dis::Model do
         expect(layer.exists?("images", hash)).to be false
       end
     end
+
+    context "without data" do
+      let(:image) { Image.create(data: nil, accept: true) }
+
+      it "removes the file" do
+        expect { image.destroy }.not_to raise_error
+      end
+    end
   end
 end
