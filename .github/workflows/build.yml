@@ -1,9 +1,7 @@
 env:
-  RUBY_VERSION: 3.0
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
   POSTGRES_DB: dis_test
-  CC_TEST_REPORTER_ID: 75d1da76d5a205a703da8a9c13c7147bec4bd765dbb1195d85664f424b51cbf1
 
 name: Build
 on:
@@ -23,7 +21,7 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-          ruby-version: 3.1
+          ruby-version: 3.3
       - name: Check code
         run: bundle exec rubocop
 
@@ -32,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby: ['3.0', '3.1', '3.2']
+        ruby: ['3.1', '3.2', '3.3']
     services:
       postgres:
         image: postgres:latest
@@ -72,7 +70,7 @@ jobs:
           PGPASSWORD: ${{ env.POSTGRES_PASSWORD }}
         run: bundle exec rspec
       - name: Send results to Code Climate
-        uses: paambaati/codeclimate-action@v2.6.0
+        uses: paambaati/codeclimate-action@v5.0.0
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
         with:
