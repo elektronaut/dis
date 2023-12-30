@@ -6,8 +6,8 @@ module Dis
       result = nil
       duration = Benchmark.ms { result = block.call }
       logger.debug(format("[Dis] %<message>s (%<duration>.1fms)",
-                          message: message,
-                          duration: duration))
+                          message:,
+                          duration:))
       result
     end
 
