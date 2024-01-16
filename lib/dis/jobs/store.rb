@@ -10,6 +10,10 @@ module Dis
     class Store < ActiveJob::Base
       queue_as :dis
 
+      discard_on Dis::Errors::NotFoundError
+
+      retry_on StandardError, attempts: 10, wait: :polynomially_longer
+
       def perform(type, key)
         Dis::Storage.delayed_store(type, key)
       rescue Dis::Errors::NotFoundError

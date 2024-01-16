@@ -10,6 +10,8 @@ module Dis
     class ChangeType < ActiveJob::Base
       queue_as :dis
 
+      retry_on StandardError, attempts: 10, wait: :polynomially_longer
+
       def perform(prev_type, new_type, key)
         Dis::Storage.delayed_store(new_type, key)
         Dis::Storage.delayed_delete(prev_type, key)
