@@ -108,10 +108,7 @@ module Dis
     def existing(type, keys)
       return [] if keys.empty?
 
-      list = []
-      directory(type, keys.first).files.each do |file|
-        list << file.key
-      end
+      list = directory(type, keys.first).files.map(&:key)
 
       keys.select { |key| list.include?(key_component(type, key)) }
     end
