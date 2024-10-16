@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
 
   s.files = Dir["{lib}/**/*", "MIT-LICENSE", "README.md"]
 
-  s.required_ruby_version = ">= 3.1.0"
+  s.required_ruby_version = ">= 3.2.0"
 
   s.add_dependency "fog-core", "~> 2.1.2"
   s.add_dependency "fog-local"
