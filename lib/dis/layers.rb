@@ -12,9 +12,7 @@ module Dis
     end
 
     # Adds a layer to the collection.
-    def <<(layer)
-      @layers << layer
-    end
+    delegate :<<, to: :@layers
 
     # Clears all layers from the collection.
     def clear!
