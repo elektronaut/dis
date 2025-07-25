@@ -6,6 +6,7 @@ describe Dis::Model::ClassMethods do
   let(:with_custom_attributes) do
     Class.new(ApplicationRecord) do
       include Dis::Model
+
       self.dis_attributes = { filename: :uploaded_filename,
                               content_type: :type }
       self.dis_type = "custom"
