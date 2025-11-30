@@ -3,15 +3,15 @@
 require "spec_helper"
 
 describe Dis::Model::Data do
-  root_path = Rails.root.join("tmp/spec")
+  subject(:data) { described_class.new(image) }
 
+  let(:root_path) { Rails.root.join("tmp/spec") }
   let(:hash) { "8843d7f92416211de9ebb963ff4ce28125932878" }
   let(:file) do
     File.open(File.expand_path("../../support/fixtures/file.txt", __dir__))
   end
   let(:uploaded_file) { Rack::Test::UploadedFile.new(file, "text/plain") }
   let(:image) { Image.new }
-  let(:data) { described_class.new(image) }
 
   before do
     Dis::Storage.layers.clear!
