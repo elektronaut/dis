@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dis (1.1.15)
+    dis (1.1.16)
       benchmark
       fog-core (~> 2.1.2)
       fog-local
