@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = ">= 3.2.0"
 
+  s.add_dependency "benchmark"
   s.add_dependency "fog-core", "~> 2.1.2"
   s.add_dependency "fog-local"
   s.add_dependency "pmap", "~> 1.1.0"
