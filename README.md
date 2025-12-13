@@ -1,7 +1,5 @@
 [![Version](https://img.shields.io/gem/v/dis.svg?style=flat)](https://rubygems.org/gems/dis)
 ![Build](https://github.com/elektronaut/dis/workflows/Build/badge.svg)
-[![Code Climate](https://codeclimate.com/github/elektronaut/dis/badges/gpa.svg)](https://codeclimate.com/github/elektronaut/dis)
-[![Code Climate](https://codeclimate.com/github/elektronaut/dis/badges/coverage.svg)](https://codeclimate.com/github/elektronaut/dis)
 
 # Dis
 
