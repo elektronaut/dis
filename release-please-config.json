@@ -3,14 +3,8 @@
   "packages": {
     ".": {
       "release-type": "ruby",
-      "version-file": "lib/dis/version.rb",
-      "extra-files": [
-        {
-          "type": "generic",
-          "path": "Gemfile.lock",
-          "regex": "dis \\((?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\)"
-        }
-      ]
+      "package-name": "dis",
+      "version-file": "lib/dis/version.rb"
     }
   }
 }
