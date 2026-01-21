@@ -3,7 +3,14 @@
   "packages": {
     ".": {
       "release-type": "ruby",
-      "version-file": "lib/dis/version.rb"
+      "version-file": "lib/dis/version.rb",
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "Gemfile.lock",
+          "glob": false
+        }
+      ]
     }
   }
 }
