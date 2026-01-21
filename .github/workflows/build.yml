@@ -10,6 +10,10 @@ on:
       - main
       - develop
   pull_request:
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
 jobs:
   rubocop-test:
     name: Rubocop
@@ -69,3 +73,13 @@ jobs:
           PGUSER: ${{ env.POSTGRES_USER }}
           PGPASSWORD: ${{ env.POSTGRES_PASSWORD }}
         run: bundle exec rspec
+
+  release-please:
+    needs: [rubocop-test, rspec-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          release-type: ruby
