@@ -8,7 +8,7 @@
         {
           "type": "generic",
           "path": "Gemfile.lock",
-          "glob": false
+          "regex": "dis \\((?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\)"
         }
       ]
     }
