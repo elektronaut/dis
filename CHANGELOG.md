@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.20](https://github.com/elektronaut/dis/compare/dis/v1.1.19...dis/v1.1.20) (2026-01-22)
+
+
+### Bug Fixes
+
+* Combine release-please and publish in same workflow ([4c5a1d6](https://github.com/elektronaut/dis/commit/4c5a1d6ad9120328609f8d72d5cc6b8420493e1e))
+
 ## [1.1.19](https://github.com/elektronaut/dis/compare/dis/v1.1.18...dis/v1.1.19) (2026-01-22)
 
 
