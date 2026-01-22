@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.19](https://github.com/elektronaut/dis/compare/dis/v1.1.18...dis/v1.1.19) (2026-01-22)
+
+
+### Bug Fixes
+
+* Install dependencies before publishing gem ([236b0a6](https://github.com/elektronaut/dis/commit/236b0a6dfacca918b6d26767cc0c724fa0650dfd))
+
 ## [1.1.18](https://github.com/elektronaut/dis/compare/dis-v1.1.17...dis/v1.1.18) (2026-01-21)
 
 
