@@ -16,10 +16,6 @@ module Dis
 
       def perform(type, key)
         Dis::Storage.delayed_store(type, key)
-      rescue Dis::Errors::NotFoundError
-        Rails.logger.warn(
-          "Delayed store failed, object not found: #{[type, key].inspect}"
-        )
       end
     end
   end
