@@ -26,7 +26,9 @@ describe Dis::Model::Data do
 
   describe "#==" do
     context "when comparing with nil" do
-      it { is_expected.not_to eq(nil) }
+      it "returns false" do
+        expect(data == nil).to be false # rubocop:disable Style/NilComparison
+      end
     end
 
     context "when comparing with matching data" do
