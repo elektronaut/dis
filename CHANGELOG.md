@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.21](https://github.com/elektronaut/dis/compare/dis/v1.1.20...dis/v1.1.21) (2026-02-03)
+
+
+### Bug Fixes
+
+* handle nil in Data#== comparison ([735eb41](https://github.com/elektronaut/dis/commit/735eb41d51c51eedf1352ae7afb940c8a3a63818))
+* make discard_on work in Store job ([3074916](https://github.com/elektronaut/dis/commit/3074916d57be86ba372c1da75555399c649e35fa))
+
 ## [1.1.20](https://github.com/elektronaut/dis/compare/dis/v1.1.19...dis/v1.1.20) (2026-01-22)
 
 
