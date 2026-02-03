@@ -24,6 +24,28 @@ describe Dis::Model::Data do
     FileUtils.rm_rf(root_path)
   end
 
+  describe "#==" do
+    context "when comparing with nil" do
+      it { is_expected.not_to eq(nil) }
+    end
+
+    context "when comparing with matching data" do
+      subject(:data) { described_class.new(image, "test") }
+
+      let(:other) { described_class.new(image, "test") }
+
+      it { is_expected.to eq(other) }
+    end
+
+    context "when comparing with different data" do
+      subject(:data) { described_class.new(image, "test") }
+
+      let(:other) { described_class.new(image, "other") }
+
+      it { is_expected.not_to eq(other) }
+    end
+  end
+
   describe "#any?" do
     subject(:result) { data.any? }
 

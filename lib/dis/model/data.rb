@@ -14,6 +14,8 @@ module Dis
 
       # Returns true if two Data objects represent the same data.
       def ==(other)
+        return false unless other.respond_to?(:read)
+
         # TODO: This can be made faster by
         # comparing hashes for stored objects.
         other.read == read
