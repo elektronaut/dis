@@ -46,6 +46,43 @@ describe Dis::Model::Data do
 
       it { is_expected.not_to eq(other) }
     end
+
+    context "when both are stored with the same hash" do
+      let(:image) { Image.create(data: uploaded_file, accept: true) }
+      let(:other_image) { Image.create(data: uploaded_file, accept: true) }
+      let(:other) { described_class.new(other_image) }
+
+      it "returns true" do
+        expect(data == other).to be true
+      end
+
+      it "does not read from storage" do
+        allow(Dis::Storage).to receive(:get).and_call_original
+        _ = data == other
+        expect(Dis::Storage).not_to have_received(:get)
+      end
+    end
+
+    context "when both are stored with different hashes" do
+      let(:image) { Image.create(data: uploaded_file, accept: true) }
+      let(:other_image) do
+        Image.create(data: "different content", accept: true)
+      end
+
+      it "returns false" do
+        other = described_class.new(other_image)
+        expect(data == other).to be false
+      end
+    end
+
+    context "when comparing stored data with raw data" do
+      let(:image) { Image.create(data: uploaded_file, accept: true) }
+      let(:other) { described_class.new(image, "foobar") }
+
+      it "falls back to reading" do
+        expect(data == other).to be true
+      end
+    end
   end
 
   describe "#any?" do

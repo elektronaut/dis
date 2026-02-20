@@ -14,11 +14,13 @@ module Dis
 
       # Returns true if two Data objects represent the same data.
       def ==(other)
-        return false unless other.respond_to?(:read)
-
-        # TODO: This can be made faster by
-        # comparing hashes for stored objects.
-        other.read == read
+        if !raw? && other.is_a?(self.class) && !other.changed?
+          content_hash == other.content_hash
+        elsif other.respond_to?(:read)
+          other.read == read
+        else
+          false
+        end
       end
 
       # Returns true if data exists either in memory or in storage.
@@ -78,6 +80,12 @@ module Dis
         @tempfile
       end
 
+      protected
+
+      def content_hash
+        @record[@record.class.dis_attributes[:content_hash]]
+      end
+
       private
 
       def closest
@@ -86,10 +94,6 @@ module Dis
         elsif stored?
           stored
         end
-      end
-
-      def content_hash
-        @record[@record.class.dis_attributes[:content_hash]]
       end
 
       def raw?
