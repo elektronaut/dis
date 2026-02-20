@@ -229,6 +229,52 @@ describe Dis::Model::Data do
     end
   end
 
+  describe "#reset_read_cache!" do
+    context "when nothing has been cached" do
+      it "does not raise an error" do
+        expect { data.reset_read_cache! }.not_to raise_error
+      end
+    end
+
+    context "with cached read data" do
+      let(:data) { described_class.new(image, "test") }
+
+      before do
+        data.read
+        data.reset_read_cache!
+      end
+
+      it "allows data to be re-read" do
+        expect(data.read).to eq("test")
+      end
+    end
+
+    context "with a cached tempfile" do
+      let(:data) { described_class.new(image, "test") }
+
+      it "removes the tempfile from disk" do
+        tempfile_path = data.tempfile.path
+        data.reset_read_cache!
+        expect(File.exist?(tempfile_path)).to be false
+      end
+    end
+
+    context "with stored data" do
+      let(:image) do
+        Image.find(Image.create(data: uploaded_file, accept: true).id)
+      end
+
+      before do
+        data.read
+        data.reset_read_cache!
+      end
+
+      it "re-fetches from storage" do
+        expect(data.read).to eq("foobar")
+      end
+    end
+  end
+
   describe "#tempfile" do
     subject(:tempfile) { data.tempfile }
 

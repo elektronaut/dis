@@ -70,6 +70,16 @@ module Dis
         Dis::Storage.store(storage_type, raw)
       end
 
+      # Clears cached data and tempfiles, allowing them to be garbage
+      # collected. Subsequent calls to read or tempfile will re-fetch.
+      def reset_read_cache!
+        @read = nil
+        return unless @tempfile
+
+        @tempfile.close!
+        @tempfile = nil
+      end
+
       # Writes the data to a temporary file.
       def tempfile
         unless @tempfile
