@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/elektronaut/dis/compare/dis/v1.1.21...dis/v1.2.0) (2026-02-20)
+
+
+### Features
+
+* add Data#reset_read_cache\! to release cached data from memory ([e9d4be2](https://github.com/elektronaut/dis/commit/e9d4be2e14a32e3d84a49746063e85bdf04a65f4))
+* add file_path access for local storage ([6bc6e5f](https://github.com/elektronaut/dis/commit/6bc6e5f776d367689f99bef8456d1c9bc48dd43d))
+
+
+### Bug Fixes
+
+* use hash comparison in Data#== for stored objects ([982cb77](https://github.com/elektronaut/dis/commit/982cb7732c2c1a22e35aee8cefc32ffdd1c5b42c))
+
 ## [1.1.21](https://github.com/elektronaut/dis/compare/dis/v1.1.20...dis/v1.1.21) (2026-02-03)
 
 
