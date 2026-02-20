@@ -52,6 +52,18 @@ describe Dis::Model do
     end
   end
 
+  describe "#data_file_path" do
+    context "when the object has been saved" do
+      let(:image) do
+        Image.find(Image.create(data: uploaded_file, accept: true).id)
+      end
+
+      it "returns a path to the correct content" do
+        expect(File.read(image.data_file_path)).to eq("foobar")
+      end
+    end
+  end
+
   describe "#data=" do
     let(:image) { Image.new }
 

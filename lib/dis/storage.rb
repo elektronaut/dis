@@ -113,6 +113,19 @@ module Dis
         result
       end
 
+      # Returns the absolute file path from the first layer that has a
+      # local copy, or nil if no layer stores files locally.
+      #
+      #   Dis::Storage.file_path("things", key)
+      def file_path(type, key)
+        require_layers!
+        layers.each do |layer|
+          path = layer.file_path(type, key)
+          return path if path
+        end
+        nil
+      end
+
       # Deletes a file from all layers. Kicks off a
       # <tt>Dis::Jobs::Delete</tt> job if any delayed layers are defined.
       # Returns true if the file existed in any immediate layers,

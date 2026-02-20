@@ -264,6 +264,39 @@ describe Dis::Storage do
     end
   end
 
+  describe ".file_path" do
+    context "when a local layer has the file" do
+      before do
+        described_class.layers << layer
+        layer.store(type, hash, file)
+      end
+
+      it "returns the path from the local layer" do
+        expect(described_class.file_path(type, hash)).to eq(
+          layer.file_path(type, hash)
+        )
+      end
+    end
+
+    context "when no layer has a local path" do
+      before do
+        described_class.layers << layer
+      end
+
+      it "returns nil" do
+        expect(described_class.file_path(type, hash)).to be_nil
+      end
+    end
+
+    context "with no layers" do
+      it "raises an error" do
+        expect do
+          described_class.file_path(type, hash)
+        end.to raise_error(Dis::Errors::NoLayersError)
+      end
+    end
+  end
+
   describe ".delete" do
     context "with no immediately writeable layers" do
       before do

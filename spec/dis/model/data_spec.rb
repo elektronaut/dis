@@ -229,6 +229,30 @@ describe Dis::Model::Data do
     end
   end
 
+  describe "#file_path" do
+    subject(:result) { data.file_path }
+
+    context "with stored data in local storage" do
+      let(:image) do
+        Image.find(Image.create(data: uploaded_file, accept: true).id)
+      end
+
+      it "returns the local storage path" do
+        expect(result).to eq(
+          Dis::Storage.file_path("images", hash)
+        )
+      end
+    end
+
+    context "with raw data" do
+      let(:data) { described_class.new(image, "test") }
+
+      it "returns a tempfile path" do
+        expect(File.read(result)).to eq("test")
+      end
+    end
+  end
+
   describe "#reset_read_cache!" do
     context "when nothing has been cached" do
       it "does not raise an error" do

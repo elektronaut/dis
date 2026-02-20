@@ -80,6 +80,12 @@ module Dis
         @tempfile = nil
       end
 
+      # Returns the file path to the data. Prefers a local storage path
+      # to avoid unnecessary copies, falls back to a tempfile.
+      def file_path
+        local_path || tempfile.path
+      end
+
       # Writes the data to a temporary file.
       def tempfile
         unless @tempfile
@@ -141,6 +147,12 @@ module Dis
 
       def stored
         Dis::Storage.get(storage_type, content_hash)
+      end
+
+      def local_path
+        return if raw?
+
+        Dis::Storage.file_path(storage_type, content_hash)
       end
 
       attr_reader :raw

@@ -136,6 +136,21 @@ module Dis
       end
     end
 
+    # Returns the absolute file path for a locally stored file, or nil
+    # if the provider is not local or the file does not exist.
+    #
+    #    layer.file_path("documents", key)
+    def file_path(type, key)
+      return unless connection.respond_to?(:local_root)
+      return unless exists?(type, key)
+
+      File.join(
+        connection.local_root,
+        directory_component(type, key),
+        key_component(type, key)
+      )
+    end
+
     # Deletes a file from the store.
     #
     #   layer.delete("documents", key)

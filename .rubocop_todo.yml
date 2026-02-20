@@ -12,6 +12,13 @@ Lint/Debugger:
   Exclude:
     - 'lib/tasks/dis.rake'
 
+# Offense count: 3
+Metrics/ClassLength:
+  Exclude:
+    - 'lib/dis/layer.rb'
+    - 'lib/dis/model/data.rb'
+    - 'lib/dis/storage.rb'
+
 # Offense count: 76
 # Configuration parameters: AllowSubject.
 RSpec/MultipleMemoizedHelpers:

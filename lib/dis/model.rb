@@ -131,6 +131,11 @@ module Dis
       dis_set :filename, file.original_filename
     end
 
+    # Returns a file path to the data, preferring local storage paths.
+    def data_file_path
+      dis_data.file_path
+    end
+
     # Returns the data as a temporary file.
     delegate :tempfile, to: :dis_data
 

@@ -215,6 +215,48 @@ describe Dis::Layer do
     end
   end
 
+  describe "#file_path" do
+    subject(:result) { layer.file_path("test_files", hash) }
+
+    context "with a local provider and existing file" do
+      before { layer.store("test_files", hash, file) }
+
+      it "returns the absolute path" do
+        expect(result).to eq(target_path.to_s)
+      end
+    end
+
+    context "with a local provider and a path option" do
+      let(:layer) { described_class.new(connection, path: "mypath") }
+      let(:target_path) do
+        root_path.join("mypath",
+                       "test_files",
+                       "88",
+                       "43d7f92416211de9ebb963ff4ce28125932878")
+      end
+
+      before { layer.store("test_files", hash, file) }
+
+      it "returns the absolute path" do
+        expect(result).to eq(target_path.to_s)
+      end
+    end
+
+    context "with a local provider and non-existent file" do
+      it "returns nil" do
+        expect(result).to be_nil
+      end
+    end
+
+    context "with a non-local provider" do
+      let(:connection) { double("connection") } # rubocop:disable RSpec/VerifiedDoubles
+
+      it "returns nil" do
+        expect(result).to be_nil
+      end
+    end
+  end
+
   describe "#delete" do
     let(:result) { layer.delete("test_files", hash) }
 
