@@ -3,67 +3,15 @@
 
 # Dis
 
-Dis is a content-adressable store for file uploads in your Rails app.
+Dis is a content-addressable store for file uploads in your Rails app.
 
-Data can be stored either on disk or in the cloud - anywhere that
-[Fog](http://fog.io) knows how to talk to.
+Data can be stored either on disk or in the cloud — anywhere
+[Fog](http://fog.io) can connect to.
 
-It doesn't do any processing, but it's a simple foundation to roll
-your own on. If you're looking to handle image uploads, check out
+It doesn't do any processing, but provides a simple foundation for
+building your own. If you're looking to handle image uploads, check out
 [DynamicImage](https://github.com/elektronaut/dynamic_image). It's
 built on top of Dis and handles resizing, cropping and more on demand.
-
-Requires Rails 5+
-
-## Layers
-
-The underlaying storage consists of one or more layers. A layer is a
-unit of storage location, which can either be a local path, or a cloud
-provider like Amazon S3 or Google Cloud Storage.
-
-There are three types of layers:
-
-- **Immediate** layers are written to synchronously during the
-  request cycle.
-- **Delayed** layers are replicated in the background using ActiveJob.
-- **Cache** layers are bounded, immediate layers with LRU eviction.
-  They act as both a read cache and an upload buffer.
-
-Reads are performed from the first available layer. In case of a read
-miss, the file is backfilled from the next layer.
-
-An example configuration could be to have a local layer first, and
-then for example an Amazon S3 bucket. This provides you with an
-on-disk cache backed by cloud storage. You can also add additional
-layers if you want fault tolerance across regions or even providers.
-
-Layers can be configured as read-only. This can be useful if you want
-to read from your staging or production environment while developing
-locally, or if you're transitioning away from a provider.
-
-### Cache layers
-
-A cache layer provides bounded local storage with automatic eviction.
-Files are evicted in LRU order, but only after they have been
-replicated to at least one non-cache writeable layer. This ensures
-unreplicated uploads are never lost.
-
-The cache size is a soft limit: the cache may temporarily exceed it
-if no files are safe to evict, and will shrink back once delayed
-replication jobs complete.
-
-```ruby
-Dis::Storage.layers << Dis::Layer.new(
-  Fog::Storage.new(
-    provider: "Local",
-    local_root: Rails.root.join("tmp/dis")
-  ),
-  path: Rails.env,
-  cache: 1.gigabyte
-)
-```
-
-Cache layers cannot be combined with `delayed` or `readonly`.
 
 ## Installation
 
@@ -127,7 +75,7 @@ Document.create(data: File.open('document.pdf'),
                 filename: 'document.pdf')
 ```
 
-..or even a string:
+...or even a string:
 
 ```ruby
 Document.create(data: 'foo', content_type: 'text/plain', filename: 'foo.txt')
@@ -135,7 +83,7 @@ Document.create(data: 'foo', content_type: 'text/plain', filename: 'foo.txt')
 
 Getting your file back out is straightforward:
 
-``` ruby
+```ruby
 class DocumentsController < ApplicationController
   def show
     @document = Document.find(params[:id])
@@ -143,13 +91,60 @@ class DocumentsController < ApplicationController
       send_data(@document.data,
                 filename: @document.filename,
                 type: @document.content_type,
-                disposition: "attachment)
+                disposition: "attachment")
     end
   end
 end
 ```
 
-## Behind the scenes
+## Layers
+
+The underlying storage consists of one or more layers. A layer is a
+unit of storage location, which can either be a local path, or a cloud
+provider like Amazon S3 or Google Cloud Storage.
+
+There are three types of layers:
+
+- **Immediate** layers are written to synchronously during the
+  request cycle.
+- **Delayed** layers are replicated in the background using ActiveJob.
+- **Cache** layers are bounded, immediate layers with LRU eviction.
+  They act as both a read cache and an upload buffer.
+
+Reads are performed from the first available layer. In case of a read
+miss, the file is backfilled from the next layer.
+
+An example configuration could be to have a local layer first, and
+then for example an Amazon S3 bucket. This provides you with an
+on-disk cache backed by cloud storage. You can also add additional
+layers if you want fault tolerance across regions or even providers.
+
+Layers can be configured as read-only. This can be useful if you want
+to read from your staging or production environment while developing
+locally, or if you're transitioning away from a provider.
+
+### Cache layers
+
+A cache layer provides bounded local storage with automatic eviction.
+Files are evicted in LRU order, but only after they have been
+replicated to at least one non-cache writeable layer. This ensures
+unreplicated uploads are never lost.
+
+The cache size is a soft limit: the cache may temporarily exceed it
+if no files are safe to evict, and will shrink back once delayed
+replication jobs complete.
+
+```ruby
+Dis::Storage.layers << Dis::Layer.new(
+  Fog::Storage.new(provider: "Local", local_root: Rails.root.join("tmp/dis")),
+  path: Rails.env,
+  cache: 1.gigabyte
+)
+```
+
+Cache layers cannot be combined with `delayed` or `readonly`.
+
+## Low-level API
 
 You can interact directly with the store if you want.
 
@@ -167,23 +162,5 @@ See the [generated documentation on RubyDoc.info](https://www.rubydoc.info/gems/
 
 ## License
 
-Copyright 2014 Inge Jørgensen
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright 2014-2026 Inge Jørgensen. Released under the
+[MIT License](MIT-LICENSE).
