@@ -22,4 +22,4 @@ Metrics/ClassLength:
 # Offense count: 76
 # Configuration parameters: AllowSubject.
 RSpec/MultipleMemoizedHelpers:
-  Max: 12
+  Max: 13

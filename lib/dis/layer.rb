@@ -16,6 +16,10 @@ module Dis
   #   public readable flag set if supported by the storage provider.
   # * <tt>:path</tt> - Directory name to use for the store. For Amazon S3,
   #   this will be the name of the bucket.
+  # * <tt>:cache</tt> - Marks the layer as a bounded cache with LRU
+  #   eviction. The value specifies the soft size limit in bytes.
+  #   Cannot be combined with <tt>:delayed</tt> or
+  #   <tt>:readonly</tt>.
   #
   # ==== Examples
   #
@@ -56,6 +60,8 @@ module Dis
       @readonly   = options[:readonly]
       @public     = options[:public]
       @path       = options[:path]
+      @cache      = options[:cache]
+      validate_cache_options!
     end
 
     # Returns true if the layer is a delayed layer.
@@ -81,6 +87,41 @@ module Dis
     # Returns true if the layer is writeable.
     def writeable?
       !readonly?
+    end
+
+    # Returns true if the layer is a cache layer.
+    def cache?
+      !!@cache
+    end
+
+    # Returns the cache size limit in bytes, or nil if not a cache.
+    def max_size
+      @cache if cache?
+    end
+
+    # Returns the total size in bytes of all files stored locally.
+    # Returns 0 for non-local providers.
+    def size
+      return 0 unless connection.respond_to?(:local_root)
+
+      root = local_root_path
+      return 0 unless root.exist?
+
+      root.glob("**/*").sum { |f| f.file? ? f.size : 0 }
+    end
+
+    # Returns an array of cached file entries sorted by mtime
+    # ascending (oldest first). Each entry is a hash with keys:
+    # path, type, key, mtime, size.
+    def cached_files
+      return [] unless connection.respond_to?(:local_root)
+
+      root = local_root_path
+      return [] unless root.exist?
+
+      entries = root.glob("**/*").select(&:file?)
+      entries.filter_map { |f| cached_file_entry(f, root) }
+             .sort_by { |e| e[:mtime] }
     end
 
     # Stores a file.
@@ -131,9 +172,11 @@ module Dis
       dir = directory(type, key)
       return unless dir
 
-      debug_log("Get #{type}/#{key} from #{name}") do
+      result = debug_log("Get #{type}/#{key} from #{name}") do
         dir.files.get(key_component(type, key))
       end
+      touch_file(type, key) if result && cache?
+      result
     end
 
     # Returns the absolute file path for a locally stored file, or nil
@@ -175,7 +218,45 @@ module Dis
     private
 
     def default_options
-      { delayed: false, readonly: false, public: false, path: nil }
+      { delayed: false, readonly: false, public: false,
+        path: nil, cache: false }
+    end
+
+    def validate_cache_options!
+      return unless cache?
+
+      if delayed?
+        raise ArgumentError,
+              "cache layers cannot be delayed"
+      end
+      return unless readonly?
+
+      raise ArgumentError,
+            "cache layers cannot be readonly"
+    end
+
+    def local_root_path
+      root = Pathname.new(connection.local_root)
+      path ? root.join(path) : root
+    end
+
+    def cached_file_entry(file, root)
+      parts = file.relative_path_from(root).to_s.split("/")
+      return unless parts.length == 3
+
+      { path: file, type: parts[0], key: parts[1] + parts[2],
+        mtime: file.mtime, size: file.size }
+    end
+
+    def touch_file(type, key)
+      return unless connection.respond_to?(:local_root)
+
+      fp = File.join(
+        connection.local_root,
+        directory_component(type, key),
+        key_component(type, key)
+      )
+      FileUtils.touch(fp) if File.exist?(fp)
     end
 
     def directory_component(_type, _key)
