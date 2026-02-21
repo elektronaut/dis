@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/elektronaut/dis/compare/dis/v1.2.0...dis/v1.3.0) (2026-02-21)
+
+
+### Features
+
+* add bounded cache layer with LRU eviction ([d8334ab](https://github.com/elektronaut/dis/commit/d8334abcd72a052a2fbb8781048fc7937ef3ee61))
+
 ## [1.2.0](https://github.com/elektronaut/dis/compare/dis/v1.1.21...dis/v1.2.0) (2026-02-20)
 
 
