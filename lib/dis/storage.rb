@@ -49,9 +49,7 @@ module Dis
         layers.immediate.writeable.each do |layer|
           layer.delete(prev_type, key)
         end
-        if layers.delayed.writeable.any?
-          Dis::Jobs::ChangeType.perform_later(prev_type, new_type, key)
-        end
+        enqueue_delayed_jobs(prev_type, new_type, key)
         key
       end
 
@@ -66,6 +64,7 @@ module Dis
         if layers.delayed.writeable.any?
           Dis::Jobs::Store.perform_later(type, hash)
         end
+        Dis::Jobs::Evict.perform_later if layers.cache?
         hash
       end
 
@@ -147,6 +146,13 @@ module Dis
         deleted
       end
 
+      # Evicts cached files from all cache layers that exceed
+      # their size limit. Only evicts files that have been
+      # replicated to a non-cache writeable layer.
+      def evict_caches
+        layers.cache.each { |layer| evict_cache(layer) }
+      end
+
       # Deletes content from all delayed layers.
       #
       #   Dis::Storage.delayed_delete("things", hash)
@@ -157,6 +163,35 @@ module Dis
       end
 
       private
+
+      def enqueue_delayed_jobs(prev_type, new_type, key)
+        if layers.delayed.writeable.any?
+          Dis::Jobs::ChangeType.perform_later(
+            prev_type, new_type, key
+          )
+        end
+        Dis::Jobs::Evict.perform_later if layers.cache?
+      end
+
+      def evict_cache(layer)
+        return if layer.size <= layer.max_size
+
+        current_size = layer.size
+        layer.cached_files.each do |entry|
+          break if current_size <= layer.max_size
+
+          next unless replicated?(entry[:type], entry[:key])
+
+          layer.delete(entry[:type], entry[:key])
+          current_size -= entry[:size]
+        end
+      end
+
+      def replicated?(type, key)
+        layers.non_cache.writeable.any? do |l|
+          l.exists?(type, key)
+        end
+      end
 
       def store_immediately!(type, file)
         file_digest(file) do |hash|

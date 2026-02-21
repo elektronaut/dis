@@ -23,10 +23,15 @@ describe Dis::Storage do
   end
   let(:all_layers) { [layer, second_layer, delayed_layer, readonly_layer] }
 
+  let(:cache_layer) do
+    Dis::Layer.new(connection, path: "cache", cache: 1024)
+  end
+
   before do
     described_class.layers.clear!
     allow(Dis::Jobs::ChangeType).to receive(:perform_later)
     allow(Dis::Jobs::Delete).to receive(:perform_later)
+    allow(Dis::Jobs::Evict).to receive(:perform_later)
     allow(Dis::Jobs::Store).to receive(:perform_later)
   end
 
@@ -138,6 +143,28 @@ describe Dis::Storage do
 
       it "returns the hash" do
         expect(described_class.store(type, uploaded_file)).to eq(hash)
+      end
+    end
+
+    context "with cache layers" do
+      before do
+        described_class.layers << cache_layer
+        described_class.store(type, file)
+      end
+
+      it "enqueues an evict job" do
+        expect(Dis::Jobs::Evict).to have_received(:perform_later)
+      end
+    end
+
+    context "without cache layers" do
+      before do
+        described_class.layers << layer
+        described_class.store(type, file)
+      end
+
+      it "does not enqueue an evict job" do
+        expect(Dis::Jobs::Evict).not_to have_received(:perform_later)
       end
     end
   end
@@ -433,6 +460,68 @@ describe Dis::Storage do
         expect do
           described_class.change_type(type, new_type, hash)
         end.to raise_error(Dis::Errors::NotFoundError)
+      end
+    end
+
+    context "with cache layers" do
+      before do
+        described_class.layers << cache_layer
+        cache_layer.store(type, hash, file)
+        described_class.change_type(type, new_type, hash)
+      end
+
+      it "enqueues an evict job" do
+        expect(Dis::Jobs::Evict).to have_received(:perform_later)
+      end
+    end
+  end
+
+  describe ".evict_caches" do
+    let(:cache_layer) do
+      Dis::Layer.new(connection, path: "cache", cache: 5)
+    end
+
+    before do
+      described_class.layers << cache_layer
+      described_class.layers << layer
+    end
+
+    context "when cache is under budget" do
+      let(:cache_layer) do
+        Dis::Layer.new(connection, path: "cache", cache: 1024)
+      end
+
+      before do
+        cache_layer.store(type, hash, file)
+        layer.store(type, hash, file)
+      end
+
+      it "does not evict files" do
+        described_class.evict_caches
+        expect(cache_layer.exists?(type, hash)).to be true
+      end
+    end
+
+    context "when cache is over budget with replicated files" do
+      before do
+        cache_layer.store(type, hash, file)
+        layer.store(type, hash, file)
+      end
+
+      it "evicts oldest replicated files" do
+        described_class.evict_caches
+        expect(cache_layer.exists?(type, hash)).to be false
+      end
+    end
+
+    context "when cache is over budget with unreplicated files" do
+      before do
+        cache_layer.store(type, hash, file)
+      end
+
+      it "does not evict unreplicated files" do
+        described_class.evict_caches
+        expect(cache_layer.exists?(type, hash)).to be true
       end
     end
   end

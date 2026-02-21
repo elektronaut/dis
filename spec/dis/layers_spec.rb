@@ -3,11 +3,17 @@
 require "spec_helper"
 
 describe Dis::Layers do
-  let(:connection)     { nil }
-  let(:layer)          { Dis::Layer.new(connection) }
-  let(:delayed_layer)  { Dis::Layer.new(connection, delayed: true) }
+  let(:root_path) { Rails.root.join("tmp/spec") }
+  let(:connection) do
+    Fog::Storage.new(provider: "Local", local_root: root_path)
+  end
+  let(:layer) { Dis::Layer.new(connection) }
+  let(:delayed_layer) { Dis::Layer.new(connection, delayed: true) }
   let(:readonly_layer) { Dis::Layer.new(connection, readonly: true) }
-  let(:layers)         { described_class.new }
+  let(:cache_layer) { Dis::Layer.new(connection, cache: 1024, path: "cache") }
+  let(:layers) { described_class.new }
+
+  after { FileUtils.rm_rf(root_path) }
 
   describe "#clear!" do
     before { layers << layer }
@@ -151,6 +157,76 @@ describe Dis::Layers do
     end
 
     context "with writeable layers" do
+      before { layers << layer }
+
+      it { is_expected.to be true }
+    end
+  end
+
+  describe "#cache" do
+    before do
+      layers << layer
+      layers << cache_layer
+    end
+
+    it "only returns the cache layers" do
+      expect(layers.cache.to_a).to eq([cache_layer])
+    end
+
+    it "returns an instance of itself" do
+      expect(layers.cache).to be_a(described_class)
+    end
+  end
+
+  describe "#cache?" do
+    subject { layers.cache? }
+
+    context "with no layers" do
+      it { is_expected.to be false }
+    end
+
+    context "with no cache layers" do
+      before { layers << layer }
+
+      it { is_expected.to be false }
+    end
+
+    context "with cache layers" do
+      before { layers << cache_layer }
+
+      it { is_expected.to be true }
+    end
+  end
+
+  describe "#non_cache" do
+    before do
+      layers << layer
+      layers << cache_layer
+    end
+
+    it "only returns the non-cache layers" do
+      expect(layers.non_cache.to_a).to eq([layer])
+    end
+
+    it "returns an instance of itself" do
+      expect(layers.non_cache).to be_a(described_class)
+    end
+  end
+
+  describe "#non_cache?" do
+    subject { layers.non_cache? }
+
+    context "with no layers" do
+      it { is_expected.to be false }
+    end
+
+    context "with only cache layers" do
+      before { layers << cache_layer }
+
+      it { is_expected.to be false }
+    end
+
+    context "with non-cache layers" do
       before { layers << layer }
 
       it { is_expected.to be true }

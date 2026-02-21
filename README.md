@@ -21,9 +21,13 @@ The underlaying storage consists of one or more layers. A layer is a
 unit of storage location, which can either be a local path, or a cloud
 provider like Amazon S3 or Google Cloud Storage.
 
-There are two types of layers, immediate and delayed. Files are
-written to immediate layers and then replicated to the rest in the
-background using ActiveJob.
+There are three types of layers:
+
+- **Immediate** layers are written to synchronously during the
+  request cycle.
+- **Delayed** layers are replicated in the background using ActiveJob.
+- **Cache** layers are bounded, immediate layers with LRU eviction.
+  They act as both a read cache and an upload buffer.
 
 Reads are performed from the first available layer. In case of a read
 miss, the file is backfilled from the next layer.
@@ -36,6 +40,30 @@ layers if you want fault tolerance across regions or even providers.
 Layers can be configured as read-only. This can be useful if you want
 to read from your staging or production environment while developing
 locally, or if you're transitioning away from a provider.
+
+### Cache layers
+
+A cache layer provides bounded local storage with automatic eviction.
+Files are evicted in LRU order, but only after they have been
+replicated to at least one non-cache writeable layer. This ensures
+unreplicated uploads are never lost.
+
+The cache size is a soft limit: the cache may temporarily exceed it
+if no files are safe to evict, and will shrink back once delayed
+replication jobs complete.
+
+```ruby
+Dis::Storage.layers << Dis::Layer.new(
+  Fog::Storage.new(
+    provider: "Local",
+    local_root: Rails.root.join("tmp/dis")
+  ),
+  path: Rails.env,
+  cache: 1.gigabyte
+)
+```
+
+Cache layers cannot be combined with `delayed` or `readonly`.
 
 ## Installation
 

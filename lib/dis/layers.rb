@@ -63,5 +63,25 @@ module Dis
     def writeable?
       writeable.any?
     end
+
+    # Returns a new instance containing only the cache layers.
+    def cache
+      self.class.new select(&:cache?)
+    end
+
+    # Returns true if one or more cache layers exist.
+    def cache?
+      cache.any?
+    end
+
+    # Returns a new instance containing only the non-cache layers.
+    def non_cache
+      self.class.new reject(&:cache?)
+    end
+
+    # Returns true if one or more non-cache layers exist.
+    def non_cache?
+      non_cache.any?
+    end
   end
 end

@@ -9,6 +9,17 @@ Dis::Storage.layers << Dis::Layer.new(
   path: Rails.env
 )
 
+# You can also use a cache layer with bounded storage and LRU eviction:
+
+# Dis::Storage.layers << Dis::Layer.new(
+#   Fog::Storage.new(
+#     provider: "Local",
+#     local_root: Rails.root.join("tmp/dis")
+#   ),
+#   path: Rails.env,
+#   cache: 1.gigabyte
+# )
+
 # You can also add cloud storage:
 
 # require 'fog/aws/storage'

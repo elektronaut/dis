@@ -98,6 +98,128 @@ describe Dis::Layer do
     end
   end
 
+  describe "#cache?" do
+    subject { layer.cache? }
+
+    context "when the layer is a cache" do
+      let(:layer) do
+        described_class.new(connection, cache: 1024)
+      end
+
+      it { is_expected.to be true }
+    end
+
+    context "when the layer isn't a cache" do
+      it { is_expected.to be false }
+    end
+  end
+
+  describe "#max_size" do
+    context "when the layer is a cache" do
+      let(:layer) do
+        described_class.new(connection, cache: 1024)
+      end
+
+      it "returns the cache size limit" do
+        expect(layer.max_size).to eq(1024)
+      end
+    end
+
+    context "when the layer isn't a cache" do
+      it "returns nil" do
+        expect(layer.max_size).to be_nil
+      end
+    end
+  end
+
+  describe "cache option validation" do
+    it "raises ArgumentError when combined with delayed" do
+      expect do
+        described_class.new(connection, cache: 1024, delayed: true)
+      end.to raise_error(ArgumentError, /cannot be delayed/)
+    end
+
+    it "raises ArgumentError when combined with readonly" do
+      expect do
+        described_class.new(connection, cache: 1024, readonly: true)
+      end.to raise_error(ArgumentError, /cannot be readonly/)
+    end
+  end
+
+  describe "#size" do
+    context "with a local provider" do
+      let(:layer) do
+        described_class.new(connection, cache: 1024)
+      end
+
+      it "returns 0 when no files exist" do
+        expect(layer.size).to eq(0)
+      end
+
+      it "returns the total size of stored files" do
+        layer.store("test_files", hash, file)
+        expect(layer.size).to be_positive
+      end
+    end
+
+    context "with a non-local provider" do
+      let(:connection) { double("connection") } # rubocop:disable RSpec/VerifiedDoubles
+      let(:layer) do
+        described_class.new(connection, cache: 1024)
+      end
+
+      it "returns 0" do
+        expect(layer.size).to eq(0)
+      end
+    end
+  end
+
+  describe "#cached_files" do
+    let(:layer) do
+      described_class.new(connection, cache: 1024)
+    end
+
+    context "when files exist" do
+      before { layer.store("test_files", hash, file) }
+
+      it "returns one entry" do
+        expect(layer.cached_files.length).to eq(1)
+      end
+
+      it "returns the correct type" do
+        expect(layer.cached_files.first[:type]).to eq("test_files")
+      end
+
+      it "returns the correct key" do
+        expect(layer.cached_files.first[:key]).to eq(hash)
+      end
+
+      it "returns entries sorted by mtime ascending" do
+        second_hash = "a655c388fceaf194657339c3242562de66c2d102"
+        layer.store("test_files", second_hash, file)
+        entries = layer.cached_files
+        expect(entries.first[:mtime]).to be <= entries.last[:mtime]
+      end
+    end
+
+    context "when no files exist" do
+      it "returns an empty array" do
+        expect(layer.cached_files).to eq([])
+      end
+    end
+
+    context "with a non-local provider" do
+      let(:connection) { double("connection") } # rubocop:disable RSpec/VerifiedDoubles
+      let(:layer) do
+        described_class.new(connection, cache: 1024)
+      end
+
+      it "returns an empty array" do
+        expect(layer.cached_files).to eq([])
+      end
+    end
+  end
+
   describe "#get" do
     let(:result) { layer.get("test_files", hash) }
 
@@ -125,6 +247,26 @@ describe Dis::Layer do
       it "returns nil" do
         expect(result).to be_nil
       end
+    end
+  end
+
+  describe "#get on a cache layer" do
+    let(:layer) do
+      described_class.new(connection, cache: 1024)
+    end
+    let(:old_mtime) do
+      layer.store("test_files", hash, file)
+      File.mtime(target_path)
+    end
+
+    before do
+      old_mtime
+      sleep 0.05
+      layer.get("test_files", hash)
+    end
+
+    it "touches the file mtime on cache hit" do
+      expect(File.mtime(target_path)).to be > old_mtime
     end
   end
 
