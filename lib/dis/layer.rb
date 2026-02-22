@@ -149,9 +149,25 @@ module Dis
     def existing(type, keys)
       return [] if keys.empty?
 
-      list = directory(type, keys.first).files.map(&:key)
+      keys.pmap { |key| key if exists?(type, key) }.compact
+    end
 
-      keys.select { |key| list.include?(key_component(type, key)) }
+    # Returns all content hashes stored under the given type.
+    #
+    #    layer.stored_keys("documents")
+    def stored_keys(type)
+      dir = connection.directories.get(path || "")
+      return [] unless dir
+
+      prefix = "#{type}/"
+      dir.files.filter_map do |file|
+        next unless file.key.start_with?(prefix)
+
+        parts = file.key.delete_prefix(prefix).split("/")
+        next unless parts.length == 2
+
+        "#{parts[0]}#{parts[1]}"
+      end
     end
 
     # Returns true if a object with the given key exists.

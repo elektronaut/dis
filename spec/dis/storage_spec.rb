@@ -526,6 +526,107 @@ describe Dis::Storage do
     end
   end
 
+  describe ".missing_keys" do
+    before do
+      described_class.layers << layer
+      described_class.layers << delayed_layer
+    end
+
+    context "when all files exist" do
+      let!(:image) do
+        Image.create(data: "foobar", accept: true)
+      end
+
+      before do
+        described_class.delayed_store(
+          Image.dis_type, image.content_hash
+        )
+      end
+
+      it "returns an empty array" do
+        expect(described_class.missing_keys(Image)).to eq([])
+      end
+    end
+
+    context "when a file is missing from all layers" do
+      let!(:image) do
+        Image.create(data: "foobar", accept: true)
+      end
+
+      before do
+        layer.delete(Image.dis_type, image.content_hash)
+      end
+
+      it "returns the missing content hash" do
+        expect(
+          described_class.missing_keys(Image)
+        ).to eq([image.content_hash])
+      end
+    end
+
+    context "when a file exists in a delayed layer only" do
+      let!(:image) do
+        Image.create(data: "foobar", accept: true)
+      end
+
+      before do
+        described_class.delayed_store(
+          Image.dis_type, image.content_hash
+        )
+        layer.delete(Image.dis_type, image.content_hash)
+      end
+
+      it "returns an empty array" do
+        expect(described_class.missing_keys(Image)).to eq([])
+      end
+    end
+  end
+
+  describe ".orphaned_keys" do
+    before do
+      described_class.layers << layer
+      described_class.layers << delayed_layer
+    end
+
+    context "when no orphans exist" do
+      before do
+        Image.create(data: "foobar", accept: true)
+      end
+
+      it "returns an empty hash" do
+        expect(described_class.orphaned_keys(Image)).to eq({})
+      end
+    end
+
+    context "when orphaned files exist" do
+      let(:orphan_hash) do
+        "a655c388fceaf194657339c3242562de66c2d102"
+      end
+
+      before do
+        Image.create(data: "foobar", accept: true)
+        layer.store(Image.dis_type, orphan_hash, file)
+      end
+
+      it "returns orphaned keys per layer" do
+        result = described_class.orphaned_keys(Image)
+        expect(result[layer]).to eq([orphan_hash])
+      end
+
+      it "does not include referenced keys" do
+        image = Image.first
+        result = described_class.orphaned_keys(Image)
+        expect(result[layer]).not_to include(image.content_hash)
+      end
+    end
+
+    context "when layer has no stored files" do
+      it "returns an empty hash" do
+        expect(described_class.orphaned_keys(Image)).to eq({})
+      end
+    end
+  end
+
   describe ".delayed_delete" do
     before do
       all_layers.each do |layer|

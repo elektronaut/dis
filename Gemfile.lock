@@ -7,6 +7,7 @@ PATH
       fog-local
       pmap (~> 1.1.0)
       rails (> 5.0)
+      ruby-progressbar (~> 1.11)
 
 GEM
   remote: https://rubygems.org/

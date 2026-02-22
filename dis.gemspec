@@ -26,6 +26,7 @@ Gem::Specification.new do |s|
   s.add_dependency "fog-local"
   s.add_dependency "pmap", "~> 1.1.0"
   s.add_dependency "rails", "> 5.0"
+  s.add_dependency "ruby-progressbar", "~> 1.11"
 
   s.metadata = {
     "rubygems_mfa_required" => "true"

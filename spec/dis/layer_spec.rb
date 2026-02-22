@@ -278,6 +278,48 @@ describe Dis::Layer do
     before { layer.store("test_files", hash, file) }
 
     it { is_expected.to eq([hash]) }
+
+    context "with empty keys" do
+      let(:keys) { [] }
+
+      it { is_expected.to eq([]) }
+    end
+  end
+
+  describe "#stored_keys" do
+    subject(:stored_keys) { layer.stored_keys("test_files") }
+
+    context "when files exist" do
+      let(:other_hash) { "a655c388fceaf194657339c3242562de66c2d102" }
+
+      before do
+        layer.store("test_files", hash, file)
+        layer.store("test_files", other_hash, file)
+        layer.store("other_type", hash, file)
+      end
+
+      it "returns keys for the given type" do
+        expect(stored_keys).to contain_exactly(hash, other_hash)
+      end
+
+      it "does not include keys from other types" do
+        expect(layer.stored_keys("other_type")).to eq([hash])
+      end
+    end
+
+    context "when no files exist" do
+      it { is_expected.to eq([]) }
+    end
+
+    context "with a path" do
+      let(:layer) { described_class.new(connection, path: "mypath") }
+
+      before { layer.store("test_files", hash, file) }
+
+      it "returns the stored keys" do
+        expect(stored_keys).to eq([hash])
+      end
+    end
   end
 
   describe "#exists?" do

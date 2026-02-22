@@ -1,58 +1,61 @@
 # frozen_string_literal: true
 
+require "ruby-progressbar"
+
 namespace :dis do
-  desc "Check stuff"
-  task consistency_check: :environment do
+  desc "List records with no backing file in any storage layer"
+  task missing: :environment do
     unless ENV["MODELS"]
-      puts "Usage: #{$PROGRAM_NAME} dis:consistency_check " \
-           "MODELS=Avatar,Document"
+      puts "Usage: #{$PROGRAM_NAME} dis:missing MODELS=Avatar,Document"
       exit
     end
 
     models = ENV["MODELS"].split(",").map(&:strip).map(&:constantize)
 
-    jobs = Set.new
-
     models.each do |model|
-      puts "-- #{model.name} --"
+      bar = ProgressBar.create(
+        title: model.name,
+        total: model.where.not(model.dis_attributes[:content_hash] => nil).count,
+        format: "%t: |%B| %c/%C records"
+      )
 
-      content_hash_attr = model.dis_attributes[:content_hash]
-      objects = model.pluck(content_hash_attr).uniq
-      global_missing = objects.dup
-
-      puts "Unique objects: #{objects.length}"
-
-      Dis::Storage.layers.each do |layer|
-        print "Checking #{layer.name}... "
-
-        existing = layer.existing(model.dis_type, objects)
-        missing = objects - existing
-        global_missing -= existing
-        puts "#{existing.length} existing, #{missing.length} missing" +
-             (layer.readonly? ? " (read-only)" : "")
-
-        next unless layer.delayed? && !layer.readonly?
-
-        jobs += (missing - global_missing).pmap do |hash|
-          [model.dis_type, hash]
-        end.compact
+      missing = ActiveRecord::Base.logger.silence do
+        Dis::Storage.missing_keys(model) do |count|
+          bar.progress += count
+        end
       end
+      bar.finish
 
-      if global_missing.any?
-        puts "\n#{global_missing.length} objects are missing from all layers:"
-        pp global_missing
+      if missing.any?
+        puts "#{missing.length} missing:"
+        missing.each { |key| puts "  #{key}" }
+      else
+        puts "0 missing"
       end
+    end
+  end
 
-      puts
+  desc "List stored files with no matching database record"
+  task orphaned: :environment do
+    unless ENV["MODELS"]
+      puts "Usage: #{$PROGRAM_NAME} dis:orphaned MODELS=Avatar,Document"
+      exit
     end
 
-    if jobs.any?
-      print "#{jobs.length} objects can be transferred to delayed layers, " \
-            "queue now? (y/n) "
-      response = $stdin.gets.chomp
-      if /^y/i.match?(response)
-        puts "Queueing jobs..."
-        jobs.each { |type, hash| Dis::Jobs::Store.perform_later(type, hash) }
+    models = ENV["MODELS"].split(",").map(&:strip).map(&:constantize)
+
+    models.each do |model|
+      orphans = ActiveRecord::Base.logger.silence do
+        Dis::Storage.orphaned_keys(model)
+      end
+      if orphans.any?
+        orphans.each do |layer, keys|
+          puts "#{model.name} (#{layer.name}): " \
+               "#{keys.length} orphaned"
+          keys.each { |key| puts "  #{key}" }
+        end
+      else
+        puts "#{model.name}: 0 orphaned"
       end
     end
   end
