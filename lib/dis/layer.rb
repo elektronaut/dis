@@ -268,14 +268,8 @@ module Dis
     end
 
     def touch_file(type, key)
-      return unless connection.respond_to?(:local_root)
-
-      fp = File.join(
-        connection.local_root,
-        directory_component(type, key),
-        key_component(type, key)
-      )
-      FileUtils.touch(fp) if File.exist?(fp)
+      fp = file_path(type, key)
+      FileUtils.touch(fp) if fp
     end
 
     def directory_component(_type, _key)
@@ -283,7 +277,7 @@ module Dis
     end
 
     def key_component(type, key)
-      [type, key[0...2], key[2..key.length]].compact.join("/")
+      [type, key[0...2], key[2..]].compact.join("/")
     end
 
     def delete!(type, key)

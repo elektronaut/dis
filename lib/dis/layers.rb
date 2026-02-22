@@ -31,7 +31,7 @@ module Dis
 
     # Returns true if one or more delayed layers exist.
     def delayed?
-      delayed.any?
+      any?(&:delayed?)
     end
 
     # Returns a new instance containing only the immediate layers.
@@ -41,7 +41,7 @@ module Dis
 
     # Returns true if one or more immediate layers exist.
     def immediate?
-      immediate.any?
+      any?(&:immediate?)
     end
 
     # Returns a new instance containing only the readonly layers.
@@ -51,7 +51,7 @@ module Dis
 
     # Returns true if one or more readonly layers exist.
     def readonly?
-      readonly.any?
+      any?(&:readonly?)
     end
 
     # Returns a new instance containing only the writeable layers.
@@ -61,7 +61,7 @@ module Dis
 
     # Returns true if one or more writeable layers exist.
     def writeable?
-      writeable.any?
+      any?(&:writeable?)
     end
 
     # Returns a new instance containing only the cache layers.
@@ -71,7 +71,7 @@ module Dis
 
     # Returns true if one or more cache layers exist.
     def cache?
-      cache.any?
+      any?(&:cache?)
     end
 
     # Returns a new instance containing only the non-cache layers.
@@ -81,7 +81,7 @@ module Dis
 
     # Returns true if one or more non-cache layers exist.
     def non_cache?
-      non_cache.any?
+      any? { |l| !l.cache? }
     end
   end
 end
