@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.0](https://github.com/elektronaut/dis/compare/dis/v1.2.0...dis/v1.3.0) (2026-02-22)
+
+
+### Features
+
+* add bounded cache layer with LRU eviction ([d8334ab](https://github.com/elektronaut/dis/commit/d8334abcd72a052a2fbb8781048fc7937ef3ee61))
+* add dis:missing and dis:orphaned rake tasks ([dd932ce](https://github.com/elektronaut/dis/commit/dd932ced8b05403c92259e50116f76507f734809))
+* add dis:missing and dis:orphaned rake tasks ([ccf02a4](https://github.com/elektronaut/dis/commit/ccf02a489e74fdbcd319b3887240dfe9eb5ecc66))
+* handle layer availability issues on reads ([b5533a7](https://github.com/elektronaut/dis/commit/b5533a7e5bb4b9b945b5e20cc75b05ab96469255)), closes [#11](https://github.com/elektronaut/dis/issues/11)
+
 ## [1.2.0](https://github.com/elektronaut/dis/compare/dis/v1.1.21...dis/v1.2.0) (2026-02-20)
 
 
