@@ -27,12 +27,21 @@ describe Dis::Storage do
     Dis::Layer.new(connection, path: "cache", cache: 1024)
   end
 
+  def expect_error_reported
+    expect(Rails.error).to have_received(:report).with(
+      an_instance_of(StandardError),
+      handled: true, severity: :warning,
+      context: hash_including(:layer, :type, :key)
+    )
+  end
+
   before do
     described_class.layers.clear!
     allow(Dis::Jobs::ChangeType).to receive(:perform_later)
     allow(Dis::Jobs::Delete).to receive(:perform_later)
     allow(Dis::Jobs::Evict).to receive(:perform_later)
     allow(Dis::Jobs::Store).to receive(:perform_later)
+    allow(Rails.error).to receive(:report)
   end
 
   after do
@@ -227,6 +236,39 @@ describe Dis::Storage do
         expect(described_class.exists?(type, hash)).to be false
       end
     end
+
+    context "when a layer raises an error" do
+      before do
+        described_class.layers << layer
+        described_class.layers << second_layer
+        second_layer.store(type, hash, file)
+        allow(layer).to receive(:exists?).and_raise(
+          StandardError.new("Connection refused")
+        )
+      end
+
+      it "falls back to the next layer" do
+        expect(described_class.exists?(type, hash)).to be true
+      end
+
+      it "reports the error" do
+        described_class.exists?(type, hash)
+        expect_error_reported
+      end
+    end
+
+    context "when all layers raise errors" do
+      before do
+        described_class.layers << layer
+        allow(layer).to receive(:exists?).and_raise(
+          StandardError.new("Connection refused")
+        )
+      end
+
+      it "returns false" do
+        expect(described_class.exists?(type, hash)).to be false
+      end
+    end
   end
 
   describe ".get" do
@@ -289,6 +331,63 @@ describe Dis::Storage do
         expect(delayed_layer.exists?(type, hash)).to be false
       end
     end
+
+    context "when a layer raises an error" do
+      before do
+        described_class.layers << layer
+        described_class.layers << second_layer
+        second_layer.store(type, hash, file)
+        allow(layer).to receive(:get).and_raise(
+          StandardError.new("Connection refused")
+        )
+      end
+
+      it "falls back to the next layer" do
+        expect(described_class.get(type, hash)).to be_a(Fog::Model)
+      end
+
+      it "reports the error" do
+        described_class.get(type, hash)
+        expect_error_reported
+      end
+    end
+
+    context "when all layers raise errors" do
+      before do
+        described_class.layers << layer
+        allow(layer).to receive(:get).and_raise(
+          StandardError.new("Connection refused")
+        )
+      end
+
+      it "raises NotFoundError" do
+        expect do
+          described_class.get(type, hash)
+        end.to raise_error(Dis::Errors::NotFoundError)
+      end
+    end
+
+    context "when backfill fails after successful read" do
+      before do
+        all_layers.each { |l| described_class.layers << l }
+        readonly_layer.send(:store!, type, hash, file)
+        allow(layer).to receive(:store).and_raise(
+          StandardError.new("Connection refused")
+        )
+        allow(second_layer).to receive(:store).and_raise(
+          StandardError.new("Connection refused")
+        )
+      end
+
+      it "still returns the file" do
+        expect(described_class.get(type, hash)).to be_a(Fog::Model)
+      end
+
+      it "reports the error" do
+        described_class.get(type, hash)
+        expect_error_reported
+      end
+    end
   end
 
   describe ".file_path" do
@@ -320,6 +419,41 @@ describe Dis::Storage do
         expect do
           described_class.file_path(type, hash)
         end.to raise_error(Dis::Errors::NoLayersError)
+      end
+    end
+
+    context "when a layer raises an error" do
+      before do
+        described_class.layers << layer
+        described_class.layers << second_layer
+        second_layer.store(type, hash, file)
+        allow(layer).to receive(:file_path).and_raise(
+          StandardError.new("Connection refused")
+        )
+      end
+
+      it "falls back to the next layer" do
+        expect(described_class.file_path(type, hash)).to eq(
+          second_layer.file_path(type, hash)
+        )
+      end
+
+      it "reports the error" do
+        described_class.file_path(type, hash)
+        expect_error_reported
+      end
+    end
+
+    context "when all layers raise errors" do
+      before do
+        described_class.layers << layer
+        allow(layer).to receive(:file_path).and_raise(
+          StandardError.new("Connection refused")
+        )
+      end
+
+      it "returns nil" do
+        expect(described_class.file_path(type, hash)).to be_nil
       end
     end
   end
