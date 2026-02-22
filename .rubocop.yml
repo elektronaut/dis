@@ -24,10 +24,6 @@ Style/StringLiterals:
 Style/Documentation:
   Enabled: false
 
-Layout/LineLength:
-  AutoCorrect: true
-  Max: 80
-
 Metrics/BlockLength:
   Exclude:
     - "*.gemspec"

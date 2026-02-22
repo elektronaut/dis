@@ -61,9 +61,7 @@ module Dis
       def store(type, file)
         require_writeable_layers!
         hash = store_immediately!(type, file)
-        if layers.delayed.writeable.any?
-          Dis::Jobs::Store.perform_later(type, hash)
-        end
+        Dis::Jobs::Store.perform_later(type, hash) if layers.delayed.writeable.any?
         Dis::Jobs::Evict.perform_later if layers.cache?
         hash
       end
@@ -142,9 +140,7 @@ module Dis
         layers.immediate.writeable.each do |layer|
           deleted = true if layer.delete(type, key)
         end
-        if layers.delayed.writeable.any?
-          Dis::Jobs::Delete.perform_later(type, key)
-        end
+        Dis::Jobs::Delete.perform_later(type, key) if layers.delayed.writeable.any?
         deleted
       end
 
