@@ -149,7 +149,10 @@ module Dis
     def existing(type, keys)
       return [] if keys.empty?
 
-      keys.pmap { |key| key if exists?(type, key) }.compact
+      futures = keys.map do |key|
+        Concurrent::Promises.future { key if exists?(type, key) }
+      end
+      futures.filter_map(&:value!)
     end
 
     # Returns all content hashes stored under the given type.

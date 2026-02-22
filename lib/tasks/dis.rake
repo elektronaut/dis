@@ -15,7 +15,9 @@ namespace :dis do
     models.each do |model|
       bar = ProgressBar.create(
         title: model.name,
-        total: model.where.not(model.dis_attributes[:content_hash] => nil).count,
+        total: model.where.not(
+          model.dis_attributes[:content_hash] => nil
+        ).count,
         format: "%t: |%B| %c/%C records"
       )
 

@@ -161,7 +161,7 @@ module Dis
         attr = model.dis_attributes[:content_hash]
         missing = []
 
-        model.where.not(attr => nil).in_batches(of: 100) do |batch|
+        model.where.not(attr => nil).in_batches(of: 200) do |batch|
           keys = batch.pluck(attr)
           missing.concat(uncovered_keys(keys.uniq, model.dis_type))
           yield keys.size if block_given?

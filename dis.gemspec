@@ -22,9 +22,9 @@ Gem::Specification.new do |s|
   s.required_ruby_version = ">= 3.2.0"
 
   s.add_dependency "benchmark"
+  s.add_dependency "concurrent-ruby", ">= 1.1"
   s.add_dependency "fog-core", ">= 2.1.2", "< 2.7.0"
   s.add_dependency "fog-local"
-  s.add_dependency "pmap", "~> 1.1.0"
   s.add_dependency "rails", "> 5.0"
   s.add_dependency "ruby-progressbar", "~> 1.11"
 
