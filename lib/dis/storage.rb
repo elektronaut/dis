@@ -85,6 +85,8 @@ module Dis
         require_layers!
         layers.each do |layer|
           return true if layer.exists?(type, key)
+        rescue StandardError => e
+          report_layer_error(e, layer:, type:, key:)
         end
         false
       end
@@ -99,16 +101,14 @@ module Dis
       # Returns an instance of Fog::Model.
       def get(type, key)
         require_layers!
-
         fetch_count = 0
         result = layers.inject(nil) do |res, layer|
-          res || lambda do
-            fetch_count += 1
-            layer.get(type, key)
-          end.call
-        end || raise(Dis::Errors::NotFoundError)
+          next res if res
 
-        store_immediately!(type, result) if fetch_count > 1
+          fetch_count += 1
+          fetch_from_layer(layer, type, key)
+        end || raise(Dis::Errors::NotFoundError)
+        backfill!(type, result) if fetch_count > 1
         result
       end
 
@@ -121,6 +121,8 @@ module Dis
         layers.each do |layer|
           path = layer.file_path(type, key)
           return path if path
+        rescue StandardError => e
+          report_layer_error(e, layer:, type:, key:)
         end
         nil
       end
@@ -236,7 +238,23 @@ module Dis
       def replicated?(type, key)
         layers.non_cache.writeable.any? do |l|
           l.exists?(type, key)
+        rescue StandardError => e
+          report_layer_error(e, layer: l, type:, key:)
+          false
         end
+      end
+
+      def fetch_from_layer(layer, type, key)
+        layer.get(type, key)
+      rescue StandardError => e
+        report_layer_error(e, layer:, type:, key:)
+        nil
+      end
+
+      def backfill!(type, file)
+        store_immediately!(type, file)
+      rescue StandardError => e
+        report_layer_error(e, type:)
       end
 
       def store_immediately!(type, file)
@@ -253,6 +271,14 @@ module Dis
 
       def require_writeable_layers!
         raise Dis::Errors::NoLayersError unless layers.immediate.writeable.any?
+      end
+
+      def report_layer_error(err, layer: nil, type: nil, key: nil)
+        Rails.error.report(
+          err, handled: true,
+               severity: :warning,
+               context: { layer: layer&.name, type:, key: }
+        )
       end
 
       def digest
