@@ -8,10 +8,15 @@ Dis is a content-addressable store for file uploads in your Rails app.
 Data can be stored either on disk or in the cloud — anywhere
 [Fog](http://fog.io) can connect to.
 
-It doesn't do any processing, but provides a simple foundation for
+It doesn't do any processing, but provides a foundation for
 building your own. If you're looking to handle image uploads, check out
 [DynamicImage](https://github.com/elektronaut/dynamic_image). It's
 built on top of Dis and handles resizing, cropping and more on demand.
+
+## Requirements
+
+- Ruby >= 3.2
+- Rails >= 7.1
 
 ## Installation
 
@@ -27,10 +32,10 @@ Now, run the generator to install the initializer:
 bin/rails generate dis:install
 ```
 
-By default, files will be stored in `db/dis`. You can edit
-`config/initializers/dis.rb` if you want to change the path or add
-additional layers. Note that you also need the corresponding
-[Fog gem](https://github.com/fog) if you want to use cloud storage:
+By default, files will be stored in `db/dis`. Edit
+`config/initializers/dis.rb` to change the path or add
+additional layers. Cloud storage requires the corresponding
+[Fog gem](https://github.com/fog):
 
 ```ruby
 gem "fog-aws"
@@ -46,9 +51,9 @@ bin/rails generate dis:model Document
 
 This will create a model along with a migration.
 
-Here's what your model might look like. Note that Dis does not
-validate any data by default, but you can use the standard Rails validators.
-A validator for validating presence of data is provided.
+Here's what your model might look like. Dis does not validate any data
+by default, but you can use standard Rails validators. A presence
+validator for data is also provided.
 
 ```ruby
 class Document < ActiveRecord::Base
@@ -60,28 +65,30 @@ class Document < ActiveRecord::Base
 end
 ```
 
-To save your document, simply set the `file` attribute.
+To save your document, set the `file` attribute. This extracts
+`content_type` and `filename` from the upload automatically.
 
 ```ruby
 document_params = params.require(:document).permit(:file)
 @document = Document.create(document_params)
 ```
 
-You can also pass a file directly:
+You can also assign `data` directly, but you'll need to set
+`content_type` and `filename` yourself:
 
 ```ruby
-Document.create(data: File.open('document.pdf'),
-                content_type: 'application/pdf',
-                filename: 'document.pdf')
+Document.create(data: File.open("document.pdf"),
+                content_type: "application/pdf",
+                filename: "document.pdf")
 ```
 
 ...or even a string:
 
 ```ruby
-Document.create(data: 'foo', content_type: 'text/plain', filename: 'foo.txt')
+Document.create(data: "foo", content_type: "text/plain", filename: "foo.txt")
 ```
 
-Getting your file back out is straightforward:
+Reading the file back out:
 
 ```ruby
 class DocumentsController < ApplicationController
@@ -99,9 +106,9 @@ end
 
 ## Layers
 
-The underlying storage consists of one or more layers. A layer is a
-unit of storage location, which can either be a local path, or a cloud
-provider like Amazon S3 or Google Cloud Storage.
+The underlying storage consists of one or more layers. Each layer
+targets either a local path or a cloud provider like Amazon S3 or
+Google Cloud Storage.
 
 There are three types of layers:
 
@@ -111,17 +118,38 @@ There are three types of layers:
 - **Cache** layers are bounded, immediate layers with LRU eviction.
   They act as both a read cache and an upload buffer.
 
-Reads are performed from the first available layer. In case of a read
-miss, the file is backfilled from the next layer.
+Reads are performed from the first available layer. On a miss, the
+file is backfilled from the next layer.
 
-An example configuration could be to have a local layer first, and
-then for example an Amazon S3 bucket. This provides you with an
-on-disk cache backed by cloud storage. You can also add additional
-layers if you want fault tolerance across regions or even providers.
+A typical multi-layer configuration has a local layer first and an
+Amazon S3 bucket second. This gives you an on-disk cache backed by
+cloud storage. Additional layers can provide fault tolerance across
+regions or providers.
 
-Layers can be configured as read-only. This can be useful if you want
-to read from your staging or production environment while developing
-locally, or if you're transitioning away from a provider.
+```ruby
+# config/initializers/dis.rb
+
+# Fast local layer (immediate, synchronous writes)
+Dis::Storage.layers << Dis::Layer.new(
+  Fog::Storage.new(provider: "Local", local_root: Rails.root.join("db/dis")),
+  path: Rails.env
+)
+
+# Cloud layer (delayed, replicated via ActiveJob)
+Dis::Storage.layers << Dis::Layer.new(
+  Fog::Storage.new(
+    provider: "AWS",
+    aws_access_key_id: ENV["AWS_ACCESS_KEY_ID"],
+    aws_secret_access_key: ENV["AWS_SECRET_ACCESS_KEY"]
+  ),
+  path: "my-bucket",
+  delayed: true
+)
+```
+
+Layers can be configured as read-only — useful for reading from
+staging or production while developing locally, or when transitioning
+away from a provider.
 
 ### Cache layers
 
@@ -146,7 +174,7 @@ Cache layers cannot be combined with `delayed` or `readonly`.
 
 ## Low-level API
 
-You can interact directly with the store if you want.
+You can also interact with the store directly.
 
 ```ruby
 file = File.open("foo.txt")
@@ -163,4 +191,4 @@ See the [generated documentation on RubyDoc.info](https://www.rubydoc.info/gems/
 ## License
 
 Copyright 2014-2026 Inge Jørgensen. Released under the
-[MIT License](MIT-LICENSE).
+[MIT License](LICENSE).

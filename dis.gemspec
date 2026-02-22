@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
                   "other binary blobs."
   s.license     = "MIT"
 
-  s.files = Dir["{lib}/**/*", "MIT-LICENSE", "README.md"]
+  s.files = Dir["{lib}/**/*", "LICENSE", "README.md"]
 
   s.required_ruby_version = ">= 3.2.0"
 

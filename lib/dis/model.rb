@@ -7,7 +7,7 @@ module Dis
   # = Dis Model
   #
   # ActiveModel extension for the model holding your data. To use it,
-  # simply include the module in your model:
+  # include the module in your model:
   #
   #   class Document < ActiveRecord::Base
   #     include Dis::Model
@@ -36,24 +36,24 @@ module Dis
   #
   # == Usage
   #
-  # To save a file, simply assign to the <tt>file</tt> attribute.
+  # To save a file, assign to the <tt>file</tt> attribute.
   #
   #   document = Document.create(file: params.permit(:file))
   #
   # <tt>content_type</tt> and <tt>filename</tt> will automatically be set if
-  # the supplied object quacks like a file. <tt>content_length</tt> will always
-  # be set. <tt>content_hash</tt> won't be set until the record is being saved.
+  # the supplied object quacks like a file. <tt>content_length</tt> and
+  # <tt>content_hash</tt> will always be set.
   #
-  # If you don't care about filenames and content types and just want to store
-  # a binary blob, you can also just set the <tt>data</tt> attribute.
+  # To store a binary blob without filenames or content types, set the
+  # <tt>data</tt> attribute directly.
   #
   #   my_data = File.read('document.pdf')
   #   document.update(data: my_data)
   #
-  # The data won't be stored until the record is saved, and not unless
+  # The data won't be stored until the record is saved, and only if
   # the record is valid.
   #
-  # To retrieve your data, simply read the <tt>data</tt> attribute. The file
+  # To retrieve your data, read the <tt>data</tt> attribute. The file
   # will be lazily loaded from the store on demand and cached in memory as long
   # as the record stays in scope.
   #
@@ -73,7 +73,7 @@ module Dis
   #     validates_data_presence
   #   end
   #
-  # If you want to validate content types, size or similar, simply use standard
+  # If you want to validate content types, size or similar, use standard
   # Rails validations on the metadata attributes:
   #
   #   validates :content_type, presence: true, format: /\Aapplication\/pdf\z/
@@ -89,18 +89,26 @@ module Dis
       attribute :data, :binary
     end
 
-    # Returns the data as a binary string, or nil if no data has been set.
+    # Returns the data as a binary string, or nil if no data has
+    # been set.
+    #
+    # @return [String, nil]
     def data
       dis_data.read
     end
 
     # Returns true if data is set.
+    #
+    # @return [Boolean]
     def data?
       dis_data.any?
     end
 
-    # Assigns new data. This also sets <tt>content_length</tt>, and resets
-    # <tt>content_hash</tt> to nil.
+    # Assigns new data. This also sets +content_length+ and
+    # +content_hash+.
+    #
+    # @param raw_data [File, IO, String, nil] the content to store
+    # @return [void]
     def data=(raw_data)
       new_data = Dis::Model::Data.new(self, raw_data)
       attribute_will_change!("data") unless new_data == dis_data
@@ -113,30 +121,48 @@ module Dis
       dis_set :content_length, dis_data.content_length
     end
 
-    # Returns true if the data has been changed since the object was last saved.
+    # Returns true if the data has been changed since the object
+    # was last saved.
+    #
+    # @return [Boolean]
     def data_changed?
       changes.include?("data")
     end
 
+    # Returns true if the record has been persisted and its data
+    # has not been changed since the last save.
+    #
+    # @return [Boolean]
     def dis_stored?
       !(new_record? || data_changed?)
     end
 
-    # Assigns new data from an uploaded file. In addition to the actions
-    # performed by <tt>data=</tt>, this will set <tt>content_type</tt> and
-    # <tt>filename</tt>.
+    # Assigns new data from an uploaded file. In addition to the
+    # actions performed by {#data=}, this will set +content_type+
+    # and +filename+.
+    #
+    # @param file [ActionDispatch::Http::UploadedFile,
+    #   Rack::Test::UploadedFile] an uploaded file that responds to
+    #   +content_type+ and +original_filename+
+    # @return [void]
     def file=(file)
       self.data = file
       dis_set :content_type, file.content_type
       dis_set :filename, file.original_filename
     end
 
-    # Returns a file path to the data, preferring local storage paths.
+    # Returns a file path to the data, preferring local storage
+    # paths. Falls back to a tempfile path if no local layer has
+    # the file.
+    #
+    # @return [String]
     def data_file_path
       dis_data.file_path
     end
 
     # Returns the data as a temporary file.
+    #
+    # @return [Tempfile]
     delegate :tempfile, to: :dis_data
 
     private

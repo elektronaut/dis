@@ -7,12 +7,18 @@ module Dis
     # Facilitates communication between the model and the storage,
     # and holds any newly assigned data before the record is saved.
     class Data
+      # @param record [ActiveRecord::Base] the model instance
+      # @param raw [File, IO, String, nil] newly assigned data
       def initialize(record, raw = nil)
         @record = record
         @raw = raw
       end
 
       # Returns true if two Data objects represent the same data.
+      #
+      # @param other [Dis::Model::Data, #read, Object] the object to
+      #   compare
+      # @return [Boolean]
       def ==(other)
         if !raw? && other.is_a?(self.class) && !other.changed?
           content_hash == other.content_hash
@@ -24,24 +30,33 @@ module Dis
       end
 
       # Returns true if data exists either in memory or in storage.
+      #
+      # @return [Boolean]
       def any?
         raw? || stored?
       end
 
       # Returns the data as a binary string.
+      #
+      # @return [String, nil]
       def read
         @read ||= read_from(closest)
       end
 
-      # Will be true if data has been explicitely set.
+      # Will be true if data has been explicitly set.
       #
+      # @return [Boolean]
+      #
+      # @example
       #   Dis::Model::Data.new(record).changed? # => false
-      #   Dis::Model::Data.new(record, new_file).changed? # => true
+      #   Dis::Model::Data.new(record, file).changed? # => true
       def changed?
         raw?
       end
 
-      # Returns the length of the data.
+      # Returns the length of the data in bytes.
+      #
+      # @return [Integer]
       def content_length
         if raw? && raw.respond_to?(:length)
           raw.length
@@ -50,9 +65,13 @@ module Dis
         end
       end
 
-      # Expires a data object from the storage if it's no longer being used
-      # by existing records. This is triggered from callbacks on the record
-      # whenever they are changed or destroyed.
+      # Expires a data object from the storage if it's no longer
+      # being used by existing records. This is triggered from
+      # callbacks on the record whenever they are changed or
+      # destroyed.
+      #
+      # @param hash [String] the content hash to expire
+      # @return [void]
       def expire(hash)
         return if hash.blank?
 
@@ -63,15 +82,22 @@ module Dis
         end
       end
 
-      # Stores the data. Returns a hash of the content for reference.
+      # Stores the data and returns the content hash.
+      #
+      # @return [String] the SHA1 content hash
+      # @raise [Dis::Errors::NoDataError] if no data has been
+      #   assigned
       def store!
         raise Dis::Errors::NoDataError unless raw?
 
         Dis::Storage.store(storage_type, raw)
       end
 
-      # Clears cached data and tempfiles, allowing them to be garbage
-      # collected. Subsequent calls to read or tempfile will re-fetch.
+      # Clears cached data and tempfiles, allowing them to be
+      # garbage collected. Subsequent calls to +read+ or +tempfile+
+      # will re-fetch from storage.
+      #
+      # @return [void]
       def reset_read_cache!
         @read = nil
         return unless @tempfile
@@ -80,13 +106,17 @@ module Dis
         @tempfile = nil
       end
 
-      # Returns the file path to the data. Prefers a local storage path
-      # to avoid unnecessary copies, falls back to a tempfile.
+      # Returns the file path to the data. Prefers a local storage
+      # path to avoid unnecessary copies, falls back to a tempfile.
+      #
+      # @return [String]
       def file_path
         local_path || tempfile.path
       end
 
       # Writes the data to a temporary file.
+      #
+      # @return [Tempfile]
       def tempfile
         unless @tempfile
           @tempfile = Tempfile.new(binmode: true)

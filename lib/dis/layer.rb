@@ -3,56 +3,47 @@
 module Dis
   # = Dis Layer
   #
-  # Represents a layer of storage. It's a wrapper around
-  # <tt>Fog::Storage</tt>, any provider supported by Fog should be usable.
+  # Represents a layer of storage. Wraps a +Fog::Storage+ connection;
+  # any provider supported by Fog should be usable.
   #
-  # ==== Options
-  #
-  # * <tt>:delayed</tt> - Delayed layers will be processed outside of
-  #   the request cycle by ActiveJob.
-  # * <tt>:readonly</tt> - Readonly layers can only be read from,
-  #   not written to.
-  # * <tt>:public</tt> - Objects stored in public layers will have the
-  #   public readable flag set if supported by the storage provider.
-  # * <tt>:path</tt> - Directory name to use for the store. For Amazon S3,
-  #   this will be the name of the bucket.
-  # * <tt>:cache</tt> - Marks the layer as a bounded cache with LRU
-  #   eviction. The value specifies the soft size limit in bytes.
-  #   Cannot be combined with <tt>:delayed</tt> or
-  #   <tt>:readonly</tt>.
-  #
-  # ==== Examples
-  #
-  # This creates a local storage layer. It's a good idea to have a local layer
-  # first, this provides you with a cache on disk that will be faster than
-  # reading from the cloud.
-  #
+  # @example Local storage layer
   #   Dis::Layer.new(
-  #     Fog::Storage.new({
-  #       provider: 'Local',
-  #       local_root: Rails.root.join('db', 'dis')
-  #     }),
+  #     Fog::Storage.new(
+  #       provider: "Local",
+  #       local_root: Rails.root.join("db/dis")
+  #     ),
   #     path: Rails.env
   #   )
   #
-  # This creates a delayed layer on Amazon S3. ActiveJob will kick in and
-  # and transfer content from one of the immediate layers later at it's
-  # leisure.
-  #
+  # @example Delayed layer on Amazon S3
   #   Dis::Layer.new(
-  #     Fog::Storage.new({
-  #       provider:              'AWS',
-  #       aws_access_key_id:     YOUR_AWS_ACCESS_KEY_ID,
+  #     Fog::Storage.new(
+  #       provider: "AWS",
+  #       aws_access_key_id: YOUR_AWS_ACCESS_KEY_ID,
   #       aws_secret_access_key: YOUR_AWS_SECRET_ACCESS_KEY
-  #     }),
+  #     ),
   #     path: "my_bucket",
   #     delayed: true
   #   )
   class Layer
     include Dis::Logging
 
+    # @return [Fog::Storage] the underlying Fog connection
     attr_reader :connection
 
+    # @param connection [Fog::Storage] a Fog storage connection
+    # @param options [Hash] layer configuration options
+    # @option options [Boolean] :delayed (false) process writes
+    #   asynchronously via ActiveJob
+    # @option options [Boolean] :readonly (false) only allow reads
+    # @option options [Boolean] :public (false) set the public
+    #   readable flag on stored objects (provider-dependent)
+    # @option options [String] :path (nil) directory or bucket name
+    # @option options [Integer, false] :cache (false) enable bounded
+    #   cache with this soft size limit in bytes. Cannot be combined
+    #   with +:delayed+ or +:readonly+
+    # @raise [ArgumentError] if +:cache+ is combined with +:delayed+
+    #   or +:readonly+
     def initialize(connection, options = {})
       options     = default_options.merge(options)
       @connection = connection
@@ -65,42 +56,58 @@ module Dis
     end
 
     # Returns true if the layer is a delayed layer.
+    #
+    # @return [Boolean]
     def delayed?
       @delayed
     end
 
     # Returns true if the layer isn't a delayed layer.
+    #
+    # @return [Boolean]
     def immediate?
       !delayed?
     end
 
     # Returns true if the layer is public.
+    #
+    # @return [Boolean]
     def public?
       @public
     end
 
     # Returns true if the layer is read only.
+    #
+    # @return [Boolean]
     def readonly?
       @readonly
     end
 
     # Returns true if the layer is writeable.
+    #
+    # @return [Boolean]
     def writeable?
       !readonly?
     end
 
     # Returns true if the layer is a cache layer.
+    #
+    # @return [Boolean]
     def cache?
       !!@cache
     end
 
     # Returns the cache size limit in bytes, or nil if not a cache.
+    #
+    # @return [Integer, nil]
     def max_size
       @cache if cache?
     end
 
     # Returns the total size in bytes of all files stored locally.
     # Returns 0 for non-local providers.
+    #
+    # @return [Integer]
     def size
       return 0 unless connection.respond_to?(:local_root)
 
@@ -110,9 +117,12 @@ module Dis
       root.glob("**/*").sum { |f| f.file? ? f.size : 0 }
     end
 
-    # Returns an array of cached file entries sorted by mtime
-    # ascending (oldest first). Each entry is a hash with keys:
-    # path, type, key, mtime, size.
+    # Returns cached file entries sorted by mtime ascending
+    # (oldest first).
+    #
+    # @return [Array<Hash>] each entry has keys +:path+
+    #   (Pathname), +:type+ (String), +:key+ (String), +:mtime+
+    #   (Time), +:size+ (Integer)
     def cached_files
       return [] unless connection.respond_to?(:local_root)
 
@@ -124,17 +134,19 @@ module Dis
              .sort_by { |e| e[:mtime] }
     end
 
-    # Stores a file.
+    # Stores a file. The key must be a hex digest of the file
+    # content. If an object with the supplied hash already exists,
+    # no action will be performed.
     #
+    # @param type [String] the type scope
+    # @param key [String] the content hash
+    # @param file [File, IO, String, Fog::Model] the content
+    # @return [Fog::Model] the stored file
+    # @raise [Dis::Errors::ReadOnlyError] if the layer is readonly
+    #
+    # @example
     #   key = Digest::SHA1.file(file.path).hexdigest
-    #   layer.store("documents", key, path)
-    #
-    # The key must be a hex digest of the file content. If an object with the
-    # supplied hash already exists, no action will be performed. In other
-    # words, no data will be overwritten if a hash collision occurs.
-    #
-    # Returns an instance of Fog::Model, or raises an error if the layer
-    # is readonly.
+    #   layer.store("documents", key, file)
     def store(type, key, file)
       raise Dis::Errors::ReadOnlyError if readonly?
 
@@ -145,7 +157,9 @@ module Dis
 
     # Returns all the given keys that exist in the layer.
     #
-    #    layer.existing("documents", keys)
+    # @param type [String] the type scope
+    # @param keys [Array<String>] content hashes to check
+    # @return [Array<String>] the subset of keys that exist
     def existing(type, keys)
       return [] if keys.empty?
 
@@ -157,7 +171,8 @@ module Dis
 
     # Returns all content hashes stored under the given type.
     #
-    #    layer.stored_keys("documents")
+    # @param type [String] the type scope
+    # @return [Array<String>] content hashes
     def stored_keys(type)
       dir = connection.directories.get(path || "")
       return [] unless dir
@@ -173,9 +188,11 @@ module Dis
       end
     end
 
-    # Returns true if a object with the given key exists.
+    # Returns true if an object with the given key exists.
     #
-    #    layer.exists?("documents", key)
+    # @param type [String] the type scope
+    # @param key [String] the content hash
+    # @return [Boolean]
     def exists?(type, key)
       if directory(type, key)&.files&.head(key_component(type, key))
         true
@@ -186,7 +203,9 @@ module Dis
 
     # Retrieves a file from the store.
     #
-    #    layer.get("documents", key)
+    # @param type [String] the type scope
+    # @param key [String] the content hash
+    # @return [Fog::Model, nil] the file, or nil if not found
     def get(type, key)
       dir = directory(type, key)
       return unless dir
@@ -198,10 +217,12 @@ module Dis
       result
     end
 
-    # Returns the absolute file path for a locally stored file, or nil
-    # if the provider is not local or the file does not exist.
+    # Returns the absolute file path for a locally stored file, or
+    # nil if the provider is not local or the file does not exist.
     #
-    #    layer.file_path("documents", key)
+    # @param type [String] the type scope
+    # @param key [String] the content hash
+    # @return [String, nil]
     def file_path(type, key)
       return unless connection.respond_to?(:local_root)
       return unless exists?(type, key)
@@ -215,10 +236,11 @@ module Dis
 
     # Deletes a file from the store.
     #
-    #   layer.delete("documents", key)
-    #
-    # Returns true if the file was deleted, or false if it could not be found.
-    # Raises an error if the layer is readonly.
+    # @param type [String] the type scope
+    # @param key [String] the content hash
+    # @return [Boolean] true if the file was deleted, false if not
+    #   found
+    # @raise [Dis::Errors::ReadOnlyError] if the layer is readonly
     def delete(type, key)
       raise Dis::Errors::ReadOnlyError if readonly?
 
@@ -229,6 +251,9 @@ module Dis
 
     # Returns a name for the layer.
     #
+    # @return [String]
+    #
+    # @example
     #   layer.name # => "Fog::Storage::Local::Real/development"
     def name
       "#{connection.class.name}/#{path}"

@@ -3,7 +3,7 @@
 module Dis
   # = Dis Storage
   #
-  # This is the interface for interacting with the storage layers.
+  # Interface for interacting with the storage layers.
   #
   # All queries are scoped by object type, which will default to the table
   # name of the model. Take care to use your own scope if you interact with
@@ -17,8 +17,13 @@ module Dis
   # one writeable, non-delayed layer must exist.
   class Storage
     class << self
-      # Returns a hex digest for a given binary. Accepts files, strings
-      # and Fog models.
+      # Returns a hex digest for a given binary. Accepts File/IO objects,
+      # strings, and Fog models.
+      #
+      # @param file [File, IO, String, Fog::Model] the content to digest
+      # @yield [hash] if a block is given, yields the hex digest
+      # @yieldparam hash [String] the computed SHA1 hex digest
+      # @return [String] the SHA1 hex digest
       def file_digest(file)
         hash = case file
                when Fog::Model
@@ -32,15 +37,25 @@ module Dis
         hash
       end
 
-      # Exposes the layer set, which is an instance of
-      # <tt>Dis::Layers</tt>.
+      # Exposes the layer set.
+      #
+      # @return [Dis::Layers]
       def layers
         @layers ||= Dis::Layers.new
       end
 
       # Changes the type of an object. Kicks off a
-      # <tt>Dis::Jobs::ChangeType</tt> job if any delayed layers are defined.
+      # {Dis::Jobs::ChangeType} job if any delayed layers are defined.
       #
+      # @param prev_type [String] the current type scope
+      # @param new_type [String] the new type scope
+      # @param key [String] the content hash
+      # @return [String] the content hash
+      # @raise [Dis::Errors::NoLayersError] if no writeable immediate
+      #   layers exist
+      # @raise [Dis::Errors::NotFoundError] if the file is not found
+      #
+      # @example
       #   Dis::Storage.change_type("old_things", "new_things", key)
       def change_type(prev_type, new_type, key)
         require_writeable_layers!
@@ -53,10 +68,17 @@ module Dis
         key
       end
 
-      # Stores a file and returns a digest. Kicks off a
-      # <tt>Dis::Jobs::Store</tt> job if any delayed layers are defined.
+      # Stores a file and returns a content hash. Kicks off a
+      # {Dis::Jobs::Store} job if any delayed layers are defined.
       #
-      #   hash = Dis::Storage.store("things", File.open('foo.bin'))
+      # @param type [String] the type scope (e.g. table name)
+      # @param file [File, IO, String, Fog::Model] the content to store
+      # @return [String] the SHA1 content hash
+      # @raise [Dis::Errors::NoLayersError] if no writeable immediate
+      #   layers exist
+      #
+      # @example
+      #   hash = Dis::Storage.store("things", File.open("foo.bin"))
       #   # => "8843d7f92416211de9ebb963ff4ce28125932878"
       def store(type, file)
         require_writeable_layers!
@@ -67,8 +89,12 @@ module Dis
       end
 
       # Transfers files from immediate layers to all delayed layers.
+      # Called internally by {Dis::Jobs::Store}.
       #
-      #   Dis::Storage.delayed_store("things", hash)
+      # @param type [String] the type scope
+      # @param hash [String] the content hash
+      # @return [void]
+      # @raise [Dis::Errors::NotFoundError] if the file is not found
       def delayed_store(type, hash)
         file = get(type, hash)
         layers.delayed.writeable.each do |layer|
@@ -78,6 +104,12 @@ module Dis
 
       # Returns true if the file exists in any layer.
       #
+      # @param type [String] the type scope
+      # @param key [String] the content hash
+      # @return [Boolean]
+      # @raise [Dis::Errors::NoLayersError] if no layers are configured
+      #
+      # @example
       #   Dis::Storage.exists?("things", key) # => true
       def exists?(type, key)
         require_layers!
@@ -89,14 +121,20 @@ module Dis
         false
       end
 
-      # Retrieves a file from the store.
+      # Retrieves a file from the store. If the first layer misses,
+      # the file is fetched from the next available layer and
+      # backfilled to all immediate layers.
       #
-      #   stuff = Dis::Storage.get("things", hash)
+      # @param type [String] the type scope
+      # @param key [String] the content hash
+      # @return [Fog::Model] the stored file
+      # @raise [Dis::Errors::NoLayersError] if no layers are configured
+      # @raise [Dis::Errors::NotFoundError] if the file is not found
+      #   in any layer
       #
-      # If any misses are detected, it will try to fetch the file from the
-      # first available layer, then store it in all immediate layer.
-      #
-      # Returns an instance of Fog::Model.
+      # @example
+      #   file = Dis::Storage.get("things", hash)
+      #   file.body # => "file contents..."
       def get(type, key)
         require_layers!
         fetch_count = 0
@@ -113,7 +151,10 @@ module Dis
       # Returns the absolute file path from the first layer that has a
       # local copy, or nil if no layer stores files locally.
       #
-      #   Dis::Storage.file_path("things", key)
+      # @param type [String] the type scope
+      # @param key [String] the content hash
+      # @return [String, nil] the absolute file path, or nil
+      # @raise [Dis::Errors::NoLayersError] if no layers are configured
       def file_path(type, key)
         require_layers!
         layers.each do |layer|
@@ -126,14 +167,18 @@ module Dis
       end
 
       # Deletes a file from all layers. Kicks off a
-      # <tt>Dis::Jobs::Delete</tt> job if any delayed layers are defined.
-      # Returns true if the file existed in any immediate layers,
-      # or false if not.
+      # {Dis::Jobs::Delete} job if any delayed layers are defined.
       #
-      #   Dis::Storage.delete("things", key)
-      #   # => true
-      #   Dis::Storage.delete("things", key)
-      #   # => false
+      # @param type [String] the type scope
+      # @param key [String] the content hash
+      # @return [Boolean] true if the file existed in any immediate
+      #   layer
+      # @raise [Dis::Errors::NoLayersError] if no writeable immediate
+      #   layers exist
+      #
+      # @example
+      #   Dis::Storage.delete("things", key) # => true
+      #   Dis::Storage.delete("things", key) # => false
       def delete(type, key)
         require_writeable_layers!
         deleted = false
@@ -147,6 +192,8 @@ module Dis
       # Evicts cached files from all cache layers that exceed
       # their size limit. Only evicts files that have been
       # replicated to a non-cache writeable layer.
+      #
+      # @return [void]
       def evict_caches
         layers.cache.each { |layer| evict_cache(layer) }
       end
@@ -154,6 +201,14 @@ module Dis
       # Returns content hashes from the model's table that exist in
       # no non-cache layer.
       #
+      # @param model [Class] an ActiveRecord model that includes
+      #   {Dis::Model}
+      # @yield [batch_size] called after each batch is checked
+      # @yieldparam batch_size [Integer] the number of keys in the
+      #   batch
+      # @return [Array<String>] content hashes with no backing file
+      #
+      # @example
       #   Dis::Storage.missing_keys(Image)
       def missing_keys(model)
         attr = model.dis_attributes[:content_hash]
@@ -170,6 +225,12 @@ module Dis
       # Returns a hash of layer => orphaned content hashes for files
       # that exist in storage but have no matching database record.
       #
+      # @param model [Class] an ActiveRecord model that includes
+      #   {Dis::Model}
+      # @return [Hash{Dis::Layer => Array<String>}] orphaned content
+      #   hashes per layer
+      #
+      # @example
       #   Dis::Storage.orphaned_keys(Image)
       def orphaned_keys(model)
         layers.non_cache.each_with_object({}) do |layer, result|
@@ -180,8 +241,11 @@ module Dis
       end
 
       # Deletes content from all delayed layers.
+      # Called internally by {Dis::Jobs::Delete}.
       #
-      #   Dis::Storage.delayed_delete("things", hash)
+      # @param type [String] the type scope
+      # @param key [String] the content hash
+      # @return [void]
       def delayed_delete(type, key)
         layers.delayed.writeable.each do |layer|
           layer.delete(type, key)
