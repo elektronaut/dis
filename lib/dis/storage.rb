@@ -153,6 +153,34 @@ module Dis
         layers.cache.each { |layer| evict_cache(layer) }
       end
 
+      # Returns content hashes from the model's table that exist in
+      # no non-cache layer.
+      #
+      #   Dis::Storage.missing_keys(Image)
+      def missing_keys(model)
+        attr = model.dis_attributes[:content_hash]
+        missing = []
+
+        model.where.not(attr => nil).in_batches(of: 200) do |batch|
+          keys = batch.pluck(attr)
+          missing.concat(uncovered_keys(keys.uniq, model.dis_type))
+          yield keys.size if block_given?
+        end
+        missing.uniq
+      end
+
+      # Returns a hash of layer => orphaned content hashes for files
+      # that exist in storage but have no matching database record.
+      #
+      #   Dis::Storage.orphaned_keys(Image)
+      def orphaned_keys(model)
+        layers.non_cache.each_with_object({}) do |layer, result|
+          orphans = layer_orphans(layer, model.dis_type, model,
+                                  model.dis_attributes[:content_hash])
+          result[layer] = orphans if orphans.any?
+        end
+      end
+
       # Deletes content from all delayed layers.
       #
       #   Dis::Storage.delayed_delete("things", hash)
@@ -171,6 +199,24 @@ module Dis
           )
         end
         Dis::Jobs::Evict.perform_later if layers.cache?
+      end
+
+      def uncovered_keys(keys, type)
+        remaining = keys.dup
+        layers.non_cache.each do |layer|
+          break if remaining.empty?
+
+          remaining -= layer.existing(type, remaining)
+        end
+        remaining
+      end
+
+      def layer_orphans(layer, type, model, attr)
+        stored = layer.stored_keys(type)
+        return [] if stored.empty?
+
+        referenced = model.where(attr => stored).pluck(attr)
+        stored - referenced
       end
 
       def evict_cache(layer)

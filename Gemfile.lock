@@ -3,10 +3,11 @@ PATH
   specs:
     dis (1.2.0)
       benchmark
+      concurrent-ruby (>= 1.1)
       fog-core (>= 2.1.2, < 2.7.0)
       fog-local
-      pmap (~> 1.1.0)
       rails (> 5.0)
+      ruby-progressbar (~> 1.11)
 
 GEM
   remote: https://rubygems.org/
@@ -165,7 +166,6 @@ GEM
     parser (3.3.10.2)
       ast (~> 2.4.1)
       racc
-    pmap (1.1.1)
     pp (0.6.3)
       prettyprint
     prettyprint (0.2.0)
