@@ -6,6 +6,7 @@ require "fog/core"
 require "fog/local"
 require "active_job"
 require "concurrent"
+require "dis/controller"
 require "dis/engine"
 require "dis/errors"
 require "dis/jobs"
@@ -13,6 +14,7 @@ require "dis/logging"
 require "dis/layer"
 require "dis/layers"
 require "dis/model"
+require "dis/response_body"
 require "dis/storage"
 require "dis/validations"
 
@@ -27,6 +29,7 @@ require "dis/validations"
 # configure layers via {Dis::Storage.layers}.
 #
 # @see Dis::Model
+# @see Dis::Controller
 # @see Dis::Storage
 # @see Dis::Layer
 module Dis

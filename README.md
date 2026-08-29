@@ -125,14 +125,34 @@ document.with_data_file { |path| Vips::Image.new_from_file(path.to_s).avg }
 
 `open_data` returns an open file, valid until you close it — even if
 the content is deleted or evicted from a cache layer meanwhile. Use it
-when the reader outlives the current call stack, such as a response
-body handed to the web server.
+when the reader outlives the current call stack.
 
 ```ruby
 document.open_data { |file| file.read }
 
 file = document.open_data # caller closes it
 ```
+
+### Sending data from a controller
+
+Include `Dis::Controller` and use `send_dis_data` to stream a record's
+data to the client. It works like `send_file`, but reads through an
+open descriptor rather than a path, so the response is unaffected if
+the content is evicted or deleted while it is being written.
+
+```ruby
+class DocumentsController < ApplicationController
+  include Dis::Controller
+
+  def show
+    send_dis_data(Document.find(params[:id]), disposition: "inline")
+  end
+end
+```
+
+`filename` and `content_type` default to the record's own metadata.
+The full set of options is `filename`, `content_type`, `disposition`
+and `status`.
 
 ## Layers
 
