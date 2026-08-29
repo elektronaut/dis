@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.1](https://github.com/elektronaut/dis/compare/dis/v2.2.0...dis/v2.2.1) (2026-08-29)
+
+
+### Bug Fixes
+
+* count content_length in bytes, size uploads without reading ([ce4baf5](https://github.com/elektronaut/dis/commit/ce4baf5b224eeb805cbd36cb907989ad157cc6a4))
+* count content_length in bytes, size uploads without reading ([f7308ad](https://github.com/elektronaut/dis/commit/f7308ad461755508e99b0f1d3b702e3f7dadc4b1))
+
 ## [2.2.0](https://github.com/elektronaut/dis/compare/dis/v2.1.0...dis/v2.2.0) (2026-08-29)
 
 
