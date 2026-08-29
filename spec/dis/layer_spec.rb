@@ -250,23 +250,51 @@ describe Dis::Layer do
     end
   end
 
-  describe "#get on a cache layer" do
-    let(:layer) do
-      described_class.new(connection, cache: 1024)
-    end
-    let(:old_mtime) do
-      layer.store("test_files", hash, file)
-      File.mtime(target_path)
+  describe "cache mtime refreshing" do
+    let(:layer) { described_class.new(connection, cache: 1024) }
+
+    def age(path, time)
+      File.utime(time.to_time, time.to_time, path)
     end
 
-    before do
-      old_mtime
-      sleep 0.05
-      layer.get("test_files", hash)
+    before { layer.store("test_files", hash, file) }
+
+    describe "#get" do
+      it "refreshes the mtime when the file is stale" do
+        age(target_path, 5.minutes.ago)
+        expect { layer.get("test_files", hash) }
+          .to(change { File.mtime(target_path) })
+      end
+
+      it "leaves the mtime alone when the file is fresh" do
+        age(target_path, 10.seconds.ago)
+        expect { layer.get("test_files", hash) }
+          .not_to(change { File.mtime(target_path) })
+      end
     end
 
-    it "touches the file mtime on cache hit" do
-      expect(File.mtime(target_path)).to be > old_mtime
+    describe "#file_path" do
+      it "refreshes the mtime when the file is stale" do
+        age(target_path, 5.minutes.ago)
+        expect { layer.file_path("test_files", hash) }
+          .to(change { File.mtime(target_path) })
+      end
+
+      it "leaves the mtime alone when the file is fresh" do
+        age(target_path, 10.seconds.ago)
+        expect { layer.file_path("test_files", hash) }
+          .not_to(change { File.mtime(target_path) })
+      end
+    end
+
+    describe "without a cache layer" do
+      let(:layer) { described_class.new(connection) }
+
+      it "never refreshes the mtime" do
+        age(target_path, 5.minutes.ago)
+        expect { layer.file_path("test_files", hash) }
+          .not_to(change { File.mtime(target_path) })
+      end
     end
   end
 

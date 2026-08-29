@@ -213,25 +213,22 @@ module Dis
       result = debug_log("Get #{type}/#{key} from #{name}") do
         dir.files.get(key_component(type, key))
       end
-      touch_file(type, key) if result && cache?
+      refresh_cache_mtime(local_file_path(type, key)) if result && cache?
       result
     end
 
     # Returns the absolute file path for a locally stored file, or
     # nil if the provider is not local or the file does not exist.
+    # On cache layers this counts as a read and may refresh the
+    # file's mtime.
     #
     # @param type [String] the type scope
     # @param key [String] the content hash
     # @return [String, nil]
     def file_path(type, key)
-      return unless connection.respond_to?(:local_root)
-      return unless exists?(type, key)
-
-      File.join(
-        connection.local_root,
-        directory_component(type, key),
-        key_component(type, key)
-      )
+      path = local_file_path(type, key)
+      refresh_cache_mtime(path) if cache?
+      path
     end
 
     # Deletes a file from the store.
@@ -292,9 +289,24 @@ module Dis
         mtime: file.mtime, size: file.size }
     end
 
-    def touch_file(type, key)
-      fp = file_path(type, key)
-      FileUtils.touch(fp) if fp
+    def local_file_path(type, key)
+      return unless connection.respond_to?(:local_root)
+      return unless exists?(type, key)
+
+      File.join(
+        connection.local_root,
+        directory_component(type, key),
+        key_component(type, key)
+      )
+    end
+
+    def refresh_cache_mtime(path)
+      return unless path
+      return unless File.mtime(path) < 1.minute.ago
+
+      FileUtils.touch(path)
+    rescue Errno::ENOENT
+      nil
     end
 
     def directory_component(_type, _key)
