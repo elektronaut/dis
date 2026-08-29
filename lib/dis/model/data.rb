@@ -58,11 +58,10 @@ module Dis
       #
       # @return [Integer]
       def content_length
-        if raw? && raw.respond_to?(:length)
-          raw.length
-        else
-          read.try(&:length).to_i
-        end
+        return raw.bytesize if raw? && raw.respond_to?(:bytesize)
+        return raw.size if raw? && raw.respond_to?(:size)
+
+        read.try(&:bytesize).to_i
       end
 
       # Expires a data object from the storage if it's no longer
