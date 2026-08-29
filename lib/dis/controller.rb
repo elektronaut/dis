@@ -29,6 +29,10 @@ module Dis
     # +filename+ and +content_type+ default to the record's own
     # metadata.
     #
+    # Responds with +206 Partial Content+ to a range request, or +416
+    # Range Not Satisfiable+ if the range lies beyond the data. Only the
+    # first range of a multi-range request is served.
+    #
     # @param record [Dis::Model] the record to send data from
     # @param filename [String, nil] suggested filename
     # @param content_type [String, nil] the content type
@@ -42,14 +46,56 @@ module Dis
     def send_dis_data(record, filename: nil, content_type: nil,
                       disposition: "attachment", status: 200)
       file = record.open_data
+      ranges = dis_byte_ranges(file.size, status)
+      response.headers["Accept-Ranges"] = "bytes"
+      return dis_unsatisfiable_range(file) if ranges && ranges.empty?
+
+      dis_send_file_headers(record, filename, content_type, disposition)
+      dis_send_body(Dis::ResponseBody.new(file, range: ranges&.first),
+                    file.size, status)
+    end
+
+    def dis_byte_ranges(size, status)
+      return unless status == 200
+      return unless dis_if_range_matches?
+
+      Rack::Utils.get_byte_ranges(request.get_header("HTTP_RANGE"), size)
+    end
+
+    def dis_if_range_matches?
+      if_range = request.get_header("HTTP_IF_RANGE")
+      return true if if_range.blank?
+
+      [response.etag, response.headers["Last-Modified"]].any? do |validator|
+        validator.present? && if_range == validator
+      end
+    end
+
+    def dis_unsatisfiable_range(file)
+      response.headers["Content-Range"] = "bytes */#{file.size}"
+      file.close
+      head :range_not_satisfiable
+    end
+
+    def dis_send_file_headers(record, filename, content_type, disposition)
       send_file_headers!(
         { filename: filename || dis_metadata(record, :filename),
           type: content_type || dis_metadata(record, :content_type),
           disposition: }.compact
       )
-      self.status = status
-      response.headers["Content-Length"] = file.size.to_s
-      self.response_body = Dis::ResponseBody.new(file)
+    end
+
+    def dis_send_body(body, size, status)
+      if body.range
+        self.status = :partial_content
+        response.headers["Content-Range"] =
+          "bytes #{body.range.begin}-#{body.range.end}/#{size}"
+      else
+        self.status = status
+      end
+
+      response.headers["Content-Length"] = body.length.to_s
+      self.response_body = body
     end
 
     def dis_metadata(record, name)
