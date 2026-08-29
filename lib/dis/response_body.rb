@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "securerandom"
+
 module Dis
   # = Dis Response Body
   #
@@ -7,48 +9,65 @@ module Dis
   # response has been sent. The file may already be unlinked, so it is
   # read through the open descriptor and never by path.
   #
-  # Streams only +range+ when one is given.
+  # Streams only the given ranges when any are given, as a
+  # +multipart/byteranges+ payload if there is more than one.
   class ResponseBody
     CHUNK_SIZE = 16_384
 
     delegate :closed?, to: :@file
 
-    # @return [Range, nil] the range being streamed, or nil for all of it
-    attr_reader :range
+    # @return [Array<Range>] the ranges being streamed
+    attr_reader :ranges
+
+    # @return [String, nil] the multipart boundary, when multipart
+    attr_reader :boundary
 
     # @param file [File] an open, readable file
-    # @param range [Range, nil] byte range to stream, or nil for all of it
-    def initialize(file, range: nil)
+    # @param ranges [Array<Range>, nil] byte ranges, or nil for all of it
+    # @param content_type [String, nil] content type of the parts
+    def initialize(file, ranges: nil, content_type: nil)
       @file = file
-      @range = range
+      @ranges = Array(ranges)
+      @content_type = content_type
+      @boundary = SecureRandom.hex(16) if multipart?
+    end
+
+    # @return [Boolean] whether more than one range is being streamed
+    def multipart?
+      ranges.length > 1
+    end
+
+    # @return [Range, nil] the range being streamed, unless multipart
+    def range
+      ranges.first unless multipart?
     end
 
     # Returns the number of bytes that will be written.
     #
     # @return [Integer]
     def length
-      range ? range.size : @file.size
+      return @file.size if ranges.empty?
+      return multipart_length if multipart?
+
+      range.size
     end
 
     # Returns the contents as a binary string.
     #
     # @return [String]
     def body
-      seek
-      @file.read(length).to_s
+      (+"").b.tap { |out| each { |chunk| out << chunk } }
     end
 
     # Yields the contents in chunks.
     #
     # @yieldparam chunk [String] a chunk of the contents
     # @return [void]
-    def each
-      seek
-      remaining = length
-      while remaining.positive? && (chunk = @file.read([CHUNK_SIZE, remaining].min))
-        remaining -= chunk.bytesize
-        yield chunk
-      end
+    def each(&)
+      return stream(0, @file.size, &) if ranges.empty?
+      return stream(range.begin, range.size, &) unless multipart?
+
+      each_part(&)
     end
 
     # Closes the underlying file.
@@ -60,8 +79,37 @@ module Dis
 
     private
 
-    def seek
-      @file.seek(range ? range.begin : 0)
+    def each_part(&)
+      ranges.each do |range|
+        yield heading(range)
+        stream(range.begin, range.size, &)
+      end
+      yield terminator
+    end
+
+    def stream(offset, remaining)
+      @file.seek(offset)
+      while remaining.positive? &&
+            (chunk = @file.read([CHUNK_SIZE, remaining].min))
+        remaining -= chunk.bytesize
+        yield chunk
+      end
+    end
+
+    def multipart_length
+      ranges.sum { |range| heading(range).bytesize + range.size } +
+        terminator.bytesize
+    end
+
+    def heading(range)
+      "\r\n--#{boundary}\r\n" \
+        "Content-Type: #{@content_type}\r\n" \
+        "Content-Range: bytes #{range.begin}-#{range.end}/#{@file.size}\r\n" \
+        "\r\n"
+    end
+
+    def terminator
+      "\r\n--#{boundary}--\r\n"
     end
   end
 end

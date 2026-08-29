@@ -144,17 +144,79 @@ describe Dis::Controller, type: :request do
     context "with multiple ranges" do
       before { get_range("bytes=0-9,20-29") }
 
+      def boundary
+        response.headers["Content-Type"][/boundary=(\S+)/, 1]
+      end
+
+      def parts
+        response.body.split("\r\n--#{boundary}").filter_map do |part|
+          next if part.empty? || part.start_with?("--")
+
+          head, _, payload = part.partition("\r\n\r\n")
+          { head: head.split("\r\n").reject(&:empty?), payload: }
+        end
+      end
+
       it "responds with partial content" do
         expect(response).to have_http_status(:partial_content)
       end
 
-      it "sends the first range" do
-        expect(response.body).to eq(content[0..9])
+      it "responds as multipart/byteranges" do
+        expect(response.headers["Content-Type"])
+          .to match(%r{\Amultipart/byteranges; boundary=\h{32}\z})
       end
 
-      it "sets Content-Range for the first range" do
-        expect(response.headers["Content-Range"])
-          .to eq("bytes 0-9/#{content.bytesize}")
+      it "does not set a top-level Content-Range" do
+        expect(response.headers["Content-Range"]).to be_nil
+      end
+
+      it "sets Content-Length to the actual body size" do
+        expect(response.headers["Content-Length"].to_i)
+          .to eq(response.body.bytesize)
+      end
+
+      it "sends one part per range" do
+        expect(parts.length).to eq(2)
+      end
+
+      it "sends the bytes of each range" do
+        expect(parts.pluck(:payload))
+          .to eq([content[0..9], content[20..29]])
+      end
+
+      it "sets Content-Range on each part" do
+        expect(parts.map { |p| p[:head].grep(/Content-Range/).first })
+          .to eq(["Content-Range: bytes 0-9/#{content.bytesize}",
+                  "Content-Range: bytes 20-29/#{content.bytesize}"])
+      end
+
+      it "sets the record's content type on each part" do
+        expect(parts.map { |p| p[:head].grep(/Content-Type/).first })
+          .to eq(["Content-Type: text/plain"] * 2)
+      end
+
+      it "terminates the multipart body" do
+        expect(response.body).to end_with("--#{boundary}--\r\n")
+      end
+
+      it "closes the file when the response is done" do
+        expect(bodies.last).to be_closed
+      end
+    end
+
+    context "with more ranges than Rack will parse" do
+      def many_ranges
+        (0...200).map { |i| "#{i}-#{i}" }.join(",")
+      end
+
+      before { get_range("bytes=#{many_ranges}") }
+
+      it "ignores the range and responds with success" do
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "sends the whole file" do
+        expect(response.body).to eq(content)
       end
     end
 

@@ -30,8 +30,8 @@ module Dis
     # metadata.
     #
     # Responds with +206 Partial Content+ to a range request, or +416
-    # Range Not Satisfiable+ if the range lies beyond the data. Only the
-    # first range of a multi-range request is served.
+    # Range Not Satisfiable+ if the range lies beyond the data. Several
+    # ranges are sent as +multipart/byteranges+.
     #
     # @param record [Dis::Model] the record to send data from
     # @param filename [String, nil] suggested filename
@@ -50,9 +50,12 @@ module Dis
       response.headers["Accept-Ranges"] = "bytes"
       return dis_unsatisfiable_range(file) if ranges && ranges.empty?
 
-      dis_send_file_headers(record, filename, content_type, disposition)
-      dis_send_body(Dis::ResponseBody.new(file, range: ranges&.first),
-                    file.size, status)
+      type = content_type || dis_metadata(record, :content_type)
+      dis_send_file_headers(record, filename, type, disposition)
+      dis_send_body(
+        Dis::ResponseBody.new(file, ranges:, content_type: type), file.size,
+        status
+      )
     end
 
     def dis_byte_ranges(size, status)
@@ -77,25 +80,28 @@ module Dis
       head :range_not_satisfiable
     end
 
-    def dis_send_file_headers(record, filename, content_type, disposition)
+    def dis_send_file_headers(record, filename, type, disposition)
       send_file_headers!(
         { filename: filename || dis_metadata(record, :filename),
-          type: content_type || dis_metadata(record, :content_type),
-          disposition: }.compact
+          type:, disposition: }.compact
       )
     end
 
     def dis_send_body(body, size, status)
-      if body.range
-        self.status = :partial_content
-        response.headers["Content-Range"] =
-          "bytes #{body.range.begin}-#{body.range.end}/#{size}"
-      else
-        self.status = status
-      end
-
+      self.status = body.ranges.any? ? :partial_content : status
+      dis_partial_headers(body, size)
       response.headers["Content-Length"] = body.length.to_s
       self.response_body = body
+    end
+
+    def dis_partial_headers(body, size)
+      if body.multipart?
+        self.content_type =
+          "multipart/byteranges; boundary=#{body.boundary}"
+      elsif body.range
+        response.headers["Content-Range"] =
+          "bytes #{body.range.begin}-#{body.range.end}/#{size}"
+      end
     end
 
     def dis_metadata(record, name)
