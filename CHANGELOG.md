@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.2](https://github.com/elektronaut/dis/compare/dis/v2.2.1...dis/v2.2.2) (2026-08-29)
+
+
+### Bug Fixes
+
+* release the file on abort rather than close ([6c86656](https://github.com/elektronaut/dis/commit/6c8665675b57220322e7013b43160deecf97db58))
+* release the file on abort rather than close ([d08abbc](https://github.com/elektronaut/dis/commit/d08abbc103bc28f94538d2c5f7ce919f70459fa5))
+
 ## [2.2.1](https://github.com/elektronaut/dis/compare/dis/v2.2.0...dis/v2.2.1) (2026-08-29)
 
 
