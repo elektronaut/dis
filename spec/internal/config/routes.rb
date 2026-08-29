@@ -5,4 +5,5 @@ Rails.application.routes.draw do
     get :download, on: :member
     get :cached, on: :member
   end
+  get "live_images/:id", to: "live_images#live", as: :live_image
 end
