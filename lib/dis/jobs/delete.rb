@@ -10,7 +10,7 @@ module Dis
     # @example
     #   Dis::Jobs::Delete.perform_later("documents", key)
     class Delete < ActiveJob::Base
-      queue_as :dis
+      queue_as { Dis.queue }
 
       retry_on StandardError, attempts: 10, wait: :polynomially_longer
 

@@ -12,7 +12,7 @@ module Dis
     # @example
     #   Dis::Jobs::Store.perform_later("documents", key)
     class Store < ActiveJob::Base
-      queue_as :dis
+      queue_as { Dis.queue }
 
       discard_on Dis::Errors::NotFoundError
 

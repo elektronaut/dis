@@ -11,7 +11,7 @@ module Dis
     # @example
     #   Dis::Jobs::Evict.perform_later
     class Evict < ActiveJob::Base
-      queue_as :dis
+      queue_as { Dis.queue }
 
       retry_on StandardError, attempts: 10, wait: :polynomially_longer
 
