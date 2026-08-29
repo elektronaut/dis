@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/elektronaut/dis/compare/dis/v1.3.0...dis/v1.3.1) (2026-08-29)
+
+
+### Bug Fixes
+
+* refresh cached file mtime on path-based reads ([f7c35c4](https://github.com/elektronaut/dis/commit/f7c35c483ac26dc137235de8df7dceab9f70e994))
+* refresh cached file mtime on path-based reads ([78d8e87](https://github.com/elektronaut/dis/commit/78d8e87cddaec3d3694cfddc5f68ef0fe6f8b849))
+
 ## [1.3.0](https://github.com/elektronaut/dis/compare/dis/v1.2.0...dis/v1.3.0) (2026-02-22)
 
 
