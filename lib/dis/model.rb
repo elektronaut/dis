@@ -151,19 +151,36 @@ module Dis
       dis_set :filename, file.original_filename
     end
 
-    # Returns a file path to the data, preferring local storage
-    # paths. Falls back to a tempfile path if no local layer has
-    # the file.
+    # Yields the path to a file containing the data, for tools that
+    # need a file name rather than the bytes. The path is valid for
+    # the duration of the block only, so resolve anything lazy before
+    # returning.
     #
-    # @return [String]
-    def data_file_path
-      dis_data.file_path
+    # @yieldparam path [Pathname] path to the data
+    # @return [Object] the return value of the block
+    #
+    # @example
+    #   document.with_data_file { |path| Vips::Image.new_from_file(path.to_s).avg }
+    def with_data_file(&)
+      dis_data.with_file(&)
     end
 
-    # Returns the data as a temporary file.
+    # Returns the data as an open, read-only file, or yields it and
+    # closes it afterwards. The data stays readable until the file is
+    # closed, even if the content is deleted or evicted meanwhile.
     #
-    # @return [Tempfile]
-    delegate :tempfile, to: :dis_data
+    # @yieldparam file [File] an open file, positioned at the start
+    # @return [File, Object] the open file, or the block's value
+    def open_data
+      file = dis_data.open
+      return file unless block_given?
+
+      begin
+        yield file
+      ensure
+        file.close unless file.closed?
+      end
+    end
 
     private
 

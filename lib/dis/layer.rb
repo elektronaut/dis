@@ -217,6 +217,29 @@ module Dis
       result
     end
 
+    # Writes the contents of a file into the given IO. Local layers
+    # copy from disk; remote layers stream in chunks, never holding
+    # the whole body in memory.
+    #
+    # @param type [String] the type scope
+    # @param key [String] the content hash
+    # @param io [IO] the destination to write to
+    # @return [Boolean] true if the file was found and written
+    def stream(type, key, io)
+      local = local_file_path(type, key)
+      if local
+        copy_local(local, io)
+        return true
+      end
+
+      dir = directory(type, key)
+      return false unless dir
+
+      debug_log("Stream #{type}/#{key} from #{name}") do
+        !fetch_chunks(dir, type, key, io).nil?
+      end
+    end
+
     # Returns the absolute file path for a locally stored file, or
     # nil if the provider is not local or the file does not exist.
     # On cache layers this counts as a read and may refresh the
@@ -307,6 +330,17 @@ module Dis
       FileUtils.touch(path)
     rescue Errno::ENOENT
       nil
+    end
+
+    def copy_local(path, io)
+      refresh_cache_mtime(path) if cache?
+      IO.copy_stream(path, io)
+    end
+
+    def fetch_chunks(dir, type, key, io)
+      dir.files.get(key_component(type, key)) do |chunk, _rem, _total|
+        io.write(chunk)
+      end
     end
 
     def directory_component(_type, _key)

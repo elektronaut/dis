@@ -458,6 +458,107 @@ describe Dis::Storage do
     end
   end
 
+  describe ".get_file" do
+    subject(:get_file) { described_class.get_file(type, hash, destination) }
+
+    let(:destination) do
+      f = Tempfile.create
+      f.binmode
+      f
+    end
+
+    after do
+      destination.close unless destination.closed?
+      FileUtils.rm_f(destination.path)
+    end
+
+    context "when the first layer has the file" do
+      before do
+        described_class.layers << layer
+        layer.store(type, hash, file)
+      end
+
+      it "writes the content" do
+        get_file
+        expect(destination.read).to eq("foobar")
+      end
+
+      it "rewinds to the start" do
+        expect(get_file.pos).to eq(0)
+      end
+    end
+
+    context "when only a later layer has the file" do
+      before do
+        described_class.layers << layer
+        described_class.layers << second_layer
+        second_layer.store(type, hash, file)
+      end
+
+      it "writes the content" do
+        get_file
+        expect(destination.read).to eq("foobar")
+      end
+
+      it "backfills the earlier layer" do
+        get_file
+        expect(layer.exists?(type, hash)).to be true
+      end
+    end
+
+    context "when a layer raises an error" do
+      before do
+        described_class.layers << layer
+        described_class.layers << second_layer
+        second_layer.store(type, hash, file)
+        allow(layer).to receive(:stream).and_raise(
+          StandardError.new("Connection refused")
+        )
+      end
+
+      it "falls back to the next layer" do
+        get_file
+        expect(destination.read).to eq("foobar")
+      end
+
+      it "reports the error" do
+        get_file
+        expect_error_reported
+      end
+    end
+
+    context "when a layer writes a partial body before failing" do
+      before do
+        described_class.layers << layer
+        described_class.layers << second_layer
+        second_layer.store(type, hash, file)
+        allow(layer).to receive(:stream) do |_type, _key, io|
+          io.write("garbage")
+          raise StandardError, "Connection reset"
+        end
+      end
+
+      it "discards the partial write" do
+        get_file
+        expect(destination.read).to eq("foobar")
+      end
+    end
+
+    context "when no layer has the file" do
+      before { described_class.layers << layer }
+
+      it "raises an error" do
+        expect { get_file }.to raise_error(Dis::Errors::NotFoundError)
+      end
+    end
+
+    context "with no layers" do
+      it "raises an error" do
+        expect { get_file }.to raise_error(Dis::Errors::NoLayersError)
+      end
+    end
+  end
+
   describe ".delete" do
     context "with no immediately writeable layers" do
       before do

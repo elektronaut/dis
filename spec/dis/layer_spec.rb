@@ -298,6 +298,46 @@ describe Dis::Layer do
     end
   end
 
+  describe "#stream" do
+    subject(:stream) { layer.stream("test_files", hash, io) }
+
+    let(:io) { StringIO.new(+"", "wb") }
+
+    context "with an existing file" do
+      before { layer.store("test_files", hash, file) }
+
+      it { is_expected.to be true }
+
+      it "writes the contents" do
+        stream
+        expect(io.string).to eq("foobar")
+      end
+    end
+
+    context "with a non-existent file" do
+      it { is_expected.to be false }
+
+      it "writes nothing" do
+        stream
+        expect(io.string).to eq("")
+      end
+    end
+
+    context "with a stale file on a cache layer" do
+      let(:layer) { described_class.new(connection, cache: 1024) }
+
+      before do
+        layer.store("test_files", hash, file)
+        stale = 5.minutes.ago.to_time
+        File.utime(stale, stale, target_path)
+      end
+
+      it "refreshes the mtime" do
+        expect { stream }.to(change { File.mtime(target_path) })
+      end
+    end
+  end
+
   describe "#existing" do
     subject { layer.existing("test_files", keys) }
 

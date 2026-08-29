@@ -229,26 +229,59 @@ describe Dis::Model::Data do
     end
   end
 
-  describe "#file_path" do
-    subject(:result) { data.file_path }
-
+  describe "#with_file" do
     context "with stored data in local storage" do
       let(:image) do
         Image.find(Image.create(data: uploaded_file, accept: true).id)
       end
 
-      it "returns the local storage path" do
-        expect(result).to eq(
-          Dis::Storage.file_path("images", hash)
-        )
+      it "yields a path to the content" do
+        expect(data.with_file { |path| File.read(path) }).to eq("foobar")
       end
     end
 
     context "with raw data" do
       let(:data) { described_class.new(image, "test") }
 
-      it "returns a tempfile path" do
-        expect(File.read(result)).to eq("test")
+      it "yields a path to the content" do
+        expect(data.with_file { |path| File.read(path) }).to eq("test")
+      end
+
+      it "removes the temporary file afterwards" do
+        expect(data.with_file { |path| path }).not_to exist
+      end
+    end
+  end
+
+  describe "#open" do
+    context "with stored data in local storage" do
+      let(:image) do
+        Image.find(Image.create(data: uploaded_file, accept: true).id)
+      end
+
+      it "returns the content" do
+        file = data.open
+        expect(file.read).to eq("foobar")
+      ensure
+        file.close
+      end
+    end
+
+    context "with raw data" do
+      let(:data) { described_class.new(image, "test") }
+
+      it "returns the content" do
+        file = data.open
+        expect(file.read).to eq("test")
+      ensure
+        file.close
+      end
+
+      it "leaves no file behind on disk" do
+        file = data.open
+        expect(File).not_to exist(file.path)
+      ensure
+        file.close
       end
     end
   end
@@ -273,16 +306,6 @@ describe Dis::Model::Data do
       end
     end
 
-    context "with a cached tempfile" do
-      let(:data) { described_class.new(image, "test") }
-
-      it "removes the tempfile from disk" do
-        tempfile_path = data.tempfile.path
-        data.reset_read_cache!
-        expect(File.exist?(tempfile_path)).to be false
-      end
-    end
-
     context "with stored data" do
       let(:image) do
         Image.find(Image.create(data: uploaded_file, accept: true).id)
@@ -296,20 +319,6 @@ describe Dis::Model::Data do
       it "re-fetches from storage" do
         expect(data.read).to eq("foobar")
       end
-    end
-  end
-
-  describe "#tempfile" do
-    subject(:tempfile) { data.tempfile }
-
-    let(:data) { described_class.new(image, uploaded_file) }
-
-    it "contains the data" do
-      expect(tempfile.read).to eq(uploaded_file.read)
-    end
-
-    it "caches the tempfile" do
-      expect(tempfile.path).to eq(data.tempfile.path)
     end
   end
 end
