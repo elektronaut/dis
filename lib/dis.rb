@@ -5,6 +5,7 @@ require "digest/sha1"
 require "fog/core"
 require "fog/local"
 require "active_job"
+require "active_support/core_ext/module/attribute_accessors"
 require "concurrent"
 require "dis/controller"
 require "dis/engine"
@@ -33,4 +34,18 @@ require "dis/validations"
 # @see Dis::Storage
 # @see Dis::Layer
 module Dis
+  # The ActiveJob queue used by delayed and cache layers. Defaults to
+  # nil, which means jobs run on the ActiveJob default queue. Set it
+  # to run them on a dedicated queue instead, either directly or with
+  # <tt>config.dis.queue</tt>.
+  #
+  # Note that your job backend must be configured to process the
+  # queue you choose. Sidekiq, Resque and Que only process a single
+  # named queue unless told otherwise.
+  #
+  # @return [String, Symbol, nil] the queue name
+  #
+  # @example
+  #   Dis.queue = :dis
+  mattr_accessor :queue
 end

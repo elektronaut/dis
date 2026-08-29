@@ -2,6 +2,12 @@
 
 # Be sure to restart your server when you modify this file.
 
+# Delayed and cache layers enqueue ActiveJob jobs. By default these run
+# on the ActiveJob default queue. Uncomment to use a dedicated queue,
+# and make sure your job backend is configured to process it:
+
+# Dis.queue = :dis
+
 # Creates a local storage layer in db/dis:
 
 Dis::Storage.layers << Dis::Layer.new(
