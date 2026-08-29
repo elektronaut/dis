@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.0](https://github.com/elektronaut/dis/compare/dis/v2.1.0...dis/v2.2.0) (2026-08-29)
+
+
+### Features
+
+* send multiple ranges as multipart/byteranges ([30f1fee](https://github.com/elektronaut/dis/commit/30f1fee765416035696d064b3e007d26b14b4cf7))
+* support range requests in send_dis_data ([d24fbcf](https://github.com/elektronaut/dis/commit/d24fbcf405265d6600f4552a8e790f36c3289843))
+* support range requests in send_dis_data ([58e7a80](https://github.com/elektronaut/dis/commit/58e7a80d67ab76a61fcd8902484b31dd968ba3f8))
+
 ## [2.1.0](https://github.com/elektronaut/dis/compare/dis/v2.0.0...dis/v2.1.0) (2026-08-29)
 
 
