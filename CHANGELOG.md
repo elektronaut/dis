@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0](https://github.com/elektronaut/dis/compare/dis/v1.3.1...dis/v2.0.0) (2026-08-29)
+
+
+### Miscellaneous Chores
+
+* release 2.0.0 ([2d39ce6](https://github.com/elektronaut/dis/commit/2d39ce6caaa46fdfcfb84cd74fd5dfc26288a419))
+
 ## [1.3.1](https://github.com/elektronaut/dis/compare/dis/v1.3.0...dis/v1.3.1) (2026-08-29)
 
 
