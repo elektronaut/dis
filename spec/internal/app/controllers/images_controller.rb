@@ -10,4 +10,10 @@ class ImagesController < ApplicationController
   def download
     send_dis_data(Image.find(params.expect(:id)))
   end
+
+  def cached
+    image = Image.find(params.expect(:id))
+    response.strong_etag = image.content_hash
+    send_dis_data(image, disposition: "inline")
+  end
 end
