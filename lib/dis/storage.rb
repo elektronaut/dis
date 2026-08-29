@@ -166,6 +166,29 @@ module Dis
         nil
       end
 
+      # Streams the contents of a file into the given file, fetching
+      # from the first layer that has it. Backfills faster layers if
+      # the content had to be fetched from further down.
+      #
+      # @param type [String] the type scope
+      # @param key [String] the content hash
+      # @param file [File] the destination, must respond to +path+
+      # @return [File] the file that was written to, positioned at
+      #   the start
+      # @raise [Dis::Errors::NoLayersError] if no layers are configured
+      # @raise [Dis::Errors::NotFoundError] if the file is not found
+      def get_file(type, key, file)
+        require_layers!
+        fetch_count = 0
+        found = layers.detect do |layer|
+          fetch_count += 1
+          stream_from_layer(layer, type, key, file)
+        end
+        raise Dis::Errors::NotFoundError unless found
+
+        finalize_fetched_file(type, file, fetch_count)
+      end
+
       # Deletes a file from all layers. Kicks off a
       # {Dis::Jobs::Delete} job if any delayed layers are defined.
       #
@@ -302,6 +325,22 @@ module Dis
           report_layer_error(e, layer: l, type:, key:)
           false
         end
+      end
+
+      def finalize_fetched_file(type, file, fetch_count)
+        file.flush
+        backfill!(type, file) if fetch_count > 1
+        file.rewind
+        file
+      end
+
+      def stream_from_layer(layer, type, key, file)
+        file.truncate(0)
+        file.rewind
+        layer.stream(type, key, file)
+      rescue StandardError => e
+        report_layer_error(e, layer:, type:, key:)
+        false
       end
 
       def fetch_from_layer(layer, type, key)

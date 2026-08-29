@@ -93,37 +93,42 @@ module Dis
         Dis::Storage.store(storage_type, raw)
       end
 
-      # Clears cached data and tempfiles, allowing them to be
-      # garbage collected. Subsequent calls to +read+ or +tempfile+
-      # will re-fetch from storage.
+      # Clears cached data, allowing it to be garbage collected.
+      # Subsequent calls to +read+ will re-fetch from storage.
       #
       # @return [void]
       def reset_read_cache!
         @read = nil
-        return unless @tempfile
-
-        @tempfile.close!
-        @tempfile = nil
       end
 
-      # Returns the file path to the data. Prefers a local storage
-      # path to avoid unnecessary copies, falls back to a tempfile.
+      # Yields a path to the data, removing any temporary copy
+      # afterwards.
       #
-      # @return [String]
-      def file_path
-        local_path || tempfile.path
-      end
+      # @yieldparam path [Pathname] path to the data
+      # @return [Object] the return value of the block
+      def with_file
+        path = local_path
+        return yield(Pathname.new(path)) if path
 
-      # Writes the data to a temporary file.
-      #
-      # @return [Tempfile]
-      def tempfile
-        unless @tempfile
-          @tempfile = Tempfile.new(binmode: true)
-          @tempfile.write(@read || read_from(closest))
-          @tempfile.open
+        file = materialize
+        begin
+          yield(Pathname.new(file.path))
+        ensure
+          close_and_unlink(file)
         end
-        @tempfile
+      end
+
+      # Returns the data as an open file. Any temporary copy is
+      # unlinked first, leaving the kernel to reclaim it on close.
+      #
+      # @return [File] an open file, positioned at the start
+      def open
+        path = local_path
+        return File.open(path, "rb") if path
+
+        file = materialize
+        File.unlink(file.path)
+        file
       end
 
       protected
@@ -183,6 +188,48 @@ module Dis
         return if raw?
 
         Dis::Storage.file_path(storage_type, content_hash)
+      end
+
+      # Writes the data to a new temporary file. The caller owns it.
+      def materialize
+        file = Tempfile.create
+        file.binmode
+        fill(file)
+        file.rewind
+        file
+      rescue StandardError
+        close_and_unlink(file) if file
+        raise
+      end
+
+      def fill(file)
+        if raw?
+          write_raw_to(file)
+        else
+          Dis::Storage.get_file(storage_type, content_hash, file)
+        end
+      end
+
+      def write_raw_to(file)
+        if raw.respond_to?(:read)
+          rewind_raw
+          IO.copy_stream(raw, file)
+          rewind_raw
+        else
+          file.write(raw)
+        end
+        file.flush
+      end
+
+      def rewind_raw
+        raw.rewind if raw.respond_to?(:rewind)
+      end
+
+      def close_and_unlink(file)
+        file.close unless file.closed?
+        File.unlink(file.path)
+      rescue Errno::ENOENT
+        nil
       end
 
       attr_reader :raw

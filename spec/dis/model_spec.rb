@@ -52,14 +52,99 @@ describe Dis::Model do
     end
   end
 
-  describe "#data_file_path" do
-    context "when the object has been saved" do
-      let(:image) do
-        Image.find(Image.create(data: uploaded_file, accept: true).id)
+  describe "#with_data_file" do
+    let(:image) do
+      Image.find(Image.create(data: uploaded_file, accept: true).id)
+    end
+
+    it "yields a path to the correct content" do
+      expect(image.with_data_file { |path| File.read(path) }).to eq("foobar")
+    end
+
+    it "yields a Pathname" do
+      expect(image.with_data_file { |path| path }).to be_a(Pathname)
+    end
+
+    it "returns the value of the block" do
+      expect(image.with_data_file { :done }).to eq(:done)
+    end
+
+    context "when no layer stores the file locally" do
+      let(:yielded) { [] }
+
+      before { allow(Dis::Storage).to receive(:file_path).and_return(nil) }
+
+      it "yields a path to the correct content" do
+        expect(image.with_data_file { |path| File.read(path) }).to eq("foobar")
       end
 
-      it "returns a path to the correct content" do
-        expect(File.read(image.data_file_path)).to eq("foobar")
+      it "removes the temporary file afterwards" do
+        path = image.with_data_file { |p| p }
+        expect(path).not_to exist
+      end
+
+      it "removes the temporary file when the block raises" do
+        suppress(RuntimeError) do
+          image.with_data_file { |p| yielded << p and raise "boom" }
+        end
+        expect(yielded.first).not_to exist
+      end
+    end
+
+    context "when the record is unsaved" do
+      it "yields a path to the assigned content" do
+        expect(
+          Image.new(data: uploaded_file).with_data_file { |path| File.read(path) }
+        ).to eq("foobar")
+      end
+    end
+  end
+
+  describe "#open_data" do
+    let(:image) do
+      Image.find(Image.create(data: uploaded_file, accept: true).id)
+    end
+
+    it "returns an open file" do
+      file = image.open_data
+      expect(file.read).to eq("foobar")
+    ensure
+      file.close
+    end
+
+    it "closes the file after the block" do
+      file = image.open_data { |f| f }
+      expect(file).to be_closed
+    end
+
+    it "returns the value of the block" do
+      expect(image.open_data { :done }).to eq(:done)
+    end
+
+    context "when no layer stores the file locally" do
+      before { allow(Dis::Storage).to receive(:file_path).and_return(nil) }
+
+      it "returns the correct content" do
+        expect(image.open_data(&:read)).to eq("foobar")
+      end
+
+      it "leaves no file behind on disk" do
+        path = image.open_data(&:path)
+        expect(File).not_to exist(path)
+      end
+
+      it "stays readable after the content is deleted" do
+        file = image.open_data
+        image.destroy
+        expect(file.read).to eq("foobar")
+      ensure
+        file.close
+      end
+    end
+
+    context "when the record is unsaved" do
+      it "returns the assigned content" do
+        expect(Image.new(data: uploaded_file).open_data(&:read)).to eq("foobar")
       end
     end
   end

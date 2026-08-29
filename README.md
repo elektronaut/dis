@@ -104,6 +104,36 @@ class DocumentsController < ApplicationController
 end
 ```
 
+### Accessing the data
+
+Which accessor you want depends on how long the data needs to stay
+valid.
+
+`data` returns the content as a binary string.
+
+```ruby
+document.data # => "foobar"
+```
+
+`with_data_file` yields a path, for tools that want a file name rather
+than the bytes. It is valid for the duration of the block, so resolve
+anything lazy before returning.
+
+```ruby
+document.with_data_file { |path| Vips::Image.new_from_file(path.to_s).avg }
+```
+
+`open_data` returns an open file, valid until you close it — even if
+the content is deleted or evicted from a cache layer meanwhile. Use it
+when the reader outlives the current call stack, such as a response
+body handed to the web server.
+
+```ruby
+document.open_data { |file| file.read }
+
+file = document.open_data # caller closes it
+```
+
 ## Layers
 
 The underlying storage consists of one or more layers. Each layer
