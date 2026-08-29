@@ -5,7 +5,6 @@
 
 ### Features
 
-* add send_dis_data for streaming stored data from controllers ([3b8eb67](https://github.com/elektronaut/dis/commit/3b8eb6767089303cb65e4dcdbba67b55f29a8f2b))
 * add send_dis_data for streaming stored data from controllers ([45be0d5](https://github.com/elektronaut/dis/commit/45be0d58061a3ff580571770db8025aa794973fd))
 
 ## [2.0.0](https://github.com/elektronaut/dis/compare/dis/v1.3.1...dis/v2.0.0) (2026-08-29)
