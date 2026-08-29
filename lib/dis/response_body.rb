@@ -70,10 +70,20 @@ module Dis
       each_part(&)
     end
 
-    # Closes the underlying file.
+    # Signals that no more content will be written. This does not
+    # release the file. ActionController::Live calls it as soon as the
+    # body is assigned, long before Rack iterates it.
     #
     # @return [void]
     def close
+      nil
+    end
+
+    # Releases the file. Rack's end-of-response close arrives here
+    # through ActionDispatch::Response#abort.
+    #
+    # @return [void]
+    def abort
       @file.close unless @file.closed?
     end
 

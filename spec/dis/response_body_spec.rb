@@ -181,18 +181,30 @@ describe Dis::ResponseBody do
   end
 
   describe "#close" do
-    it "closes the file" do
+    it "leaves the file open" do
       response_body.close
+      expect(file).not_to be_closed
+    end
+
+    it "still yields the contents afterwards" do
+      response_body.close
+      expect(response_body.body).to eq(content)
+    end
+  end
+
+  describe "#abort" do
+    it "closes the file" do
+      response_body.abort
       expect(file).to be_closed
     end
 
     it "does not raise when called twice" do
-      response_body.close
-      expect { response_body.close }.not_to raise_error
+      response_body.abort
+      expect { response_body.abort }.not_to raise_error
     end
 
     it "reports the body as closed" do
-      response_body.close
+      response_body.abort
       expect(response_body).to be_closed
     end
   end
