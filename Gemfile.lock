@@ -6,6 +6,7 @@ PATH
       concurrent-ruby (>= 1.1)
       fog-core (>= 2.1.2, < 2.7.0)
       fog-local
+      rack (>= 2.2.4)
       rails (>= 7.1)
       ruby-progressbar (~> 1.11)
 
