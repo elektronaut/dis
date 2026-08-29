@@ -172,6 +172,14 @@ describe Dis::Model::Data do
       it { is_expected.to eq(4) }
     end
 
+    context "with a multibyte string" do
+      let(:data) { described_class.new(image, "æøå") }
+
+      it "counts bytes, not characters" do
+        expect(result).to eq(6)
+      end
+    end
+
     context "with a File" do
       let(:data) { described_class.new(image, file) }
 
@@ -182,6 +190,23 @@ describe Dis::Model::Data do
       let(:data) { described_class.new(image, uploaded_file) }
 
       it { is_expected.to eq(6) }
+    end
+
+    context "with an ActionDispatch::Http::UploadedFile" do
+      let(:upload) do
+        ActionDispatch::Http::UploadedFile.new(tempfile: file,
+                                               filename: "file.txt",
+                                               type: "text/plain")
+      end
+      let(:data) { described_class.new(image, upload) }
+
+      it { is_expected.to eq(6) }
+
+      it "does not read the upload into memory" do
+        allow(upload).to receive(:read).and_call_original
+        result
+        expect(upload).not_to have_received(:read)
+      end
     end
   end
 
