@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.0](https://github.com/elektronaut/dis/compare/dis/v2.2.2...dis/v2.3.0) (2026-08-30)
+
+
+### Features
+
+* run jobs on the default ActiveJob queue ([6320342](https://github.com/elektronaut/dis/commit/6320342782344e9ea30140fb7307bf4bee1f7a3f))
+* run jobs on the default ActiveJob queue ([065e908](https://github.com/elektronaut/dis/commit/065e9082c4b202a6aae4856c668de07ea503e678))
+
 ## [2.2.2](https://github.com/elektronaut/dis/compare/dis/v2.2.1...dis/v2.2.2) (2026-08-29)
 
 
