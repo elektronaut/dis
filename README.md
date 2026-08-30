@@ -1,9 +1,14 @@
 [![Version](https://img.shields.io/gem/v/dis.svg?style=flat)](https://rubygems.org/gems/dis)
-![Build](https://github.com/elektronaut/dis/workflows/Build/badge.svg)
+[![Build](https://github.com/elektronaut/dis/actions/workflows/build.yml/badge.svg)](https://github.com/elektronaut/dis/actions/workflows/build.yml)
 
 # Dis
 
 Dis is a content-addressable store for file uploads in your Rails app.
+
+Files are stored as binary blobs, keyed by the SHA1 digest of their
+contents. Storing the same file twice stores a single blob, the
+second record simply points at the same hash. Deleting a record
+deletes the blob only when no other record refers to it.
 
 Data can be stored either on disk or in the cloud — anywhere
 [Fog](http://fog.io) can connect to.
@@ -12,11 +17,6 @@ It doesn't do any processing, but provides a foundation for
 building your own. If you're looking to handle image uploads, check out
 [DynamicImage](https://github.com/elektronaut/dynamic_image). It's
 built on top of Dis and handles resizing, cropping and more on demand.
-
-## Requirements
-
-- Ruby >= 3.2
-- Rails >= 7.1
 
 ## Installation
 
@@ -41,7 +41,14 @@ additional layers. Cloud storage requires the corresponding
 gem "fog-aws"
 ```
 
-## Usage
+Unless you intend to check your uploads into version control, add the
+storage path to `.gitignore`:
+
+```
+/db/dis
+```
+
+## Getting started
 
 Run the generator to create your model.
 
@@ -49,15 +56,19 @@ Run the generator to create your model.
 bin/rails generate dis:model Document
 ```
 
-This will create a model along with a migration.
+This creates a model along with a migration for the four attributes
+Dis needs: `content_hash`, `content_type`, `content_length` and
+`filename`.
 
-Here's what your model might look like. Dis does not validate any data
-by default, but you can use standard Rails validators. A presence
-validator for data is also provided.
+Dis does not validate any data by default, but you can use standard
+Rails validators. A presence validator for data is also provided; use
+it rather than `validates :data, presence: true`, which would load the
+data from storage on every save.
 
 ```ruby
 class Document < ActiveRecord::Base
   include Dis::Model
+
   validates_data_presence
   validates :content_type, presence: true, format: /\Aapplication\/(x\-)?pdf\z/
   validates :filename, presence: true, format: /\A[\w_\-\.]+\.pdf\z/i
@@ -65,96 +76,86 @@ class Document < ActiveRecord::Base
 end
 ```
 
-To save your document, set the `file` attribute. This extracts
-`content_type` and `filename` from the upload automatically.
-
-```ruby
-document_params = params.require(:document).permit(:file)
-@document = Document.create(document_params)
-```
-
-You can also assign `data` directly, but you'll need to set
-`content_type` and `filename` yourself:
-
-```ruby
-Document.create(data: File.open("document.pdf"),
-                content_type: "application/pdf",
-                filename: "document.pdf")
-```
-
-...or even a string:
-
-```ruby
-Document.create(data: "foo", content_type: "text/plain", filename: "foo.txt")
-```
-
-Reading the file back out:
-
-```ruby
-class DocumentsController < ApplicationController
-  def show
-    @document = Document.find(params[:id])
-    if stale?(@document)
-      send_data(@document.data,
-                filename: @document.filename,
-                type: @document.content_type,
-                disposition: "attachment")
-    end
-  end
-end
-```
-
-### Accessing the data
-
-Which accessor you want depends on how long the data needs to stay
-valid.
-
-`data` returns the content as a binary string.
-
-```ruby
-document.data # => "foobar"
-```
-
-`with_data_file` yields a path, for tools that want a file name rather
-than the bytes. It is valid for the duration of the block, so resolve
-anything lazy before returning.
-
-```ruby
-document.with_data_file { |path| Vips::Image.new_from_file(path.to_s).avg }
-```
-
-`open_data` returns an open file, valid until you close it — even if
-the content is deleted or evicted from a cache layer meanwhile. Use it
-when the reader outlives the current call stack.
-
-```ruby
-document.open_data { |file| file.read }
-
-file = document.open_data # caller closes it
-```
-
-### Sending data from a controller
-
-Include `Dis::Controller` and use `send_dis_data` to stream a record's
-data to the client. It works like `send_file`, but reads through an
-open descriptor rather than a path, so the response is unaffected if
-the content is evicted or deleted while it is being written.
+Assigning the upload to the `file` attribute stores it, and
+`send_dis_data` streams it back to the client.
 
 ```ruby
 class DocumentsController < ApplicationController
   include Dis::Controller
 
+  def create
+    @document = Document.create(params.expect(document: [:file]))
+    redirect_to @document
+  end
+
   def show
-    send_dis_data(Document.find(params[:id]), disposition: "inline")
+    @document = Document.find(params[:id])
+    send_dis_data(@document) if stale?(@document)
   end
 end
 ```
 
-`filename` and `content_type` default to the record's own metadata.
-The full set of options is `filename`, `content_type`, `disposition`
-and `status`.
+`send_dis_data` works like `send_file`, but reads through an open
+descriptor rather than a path, so the response is unaffected if the
+content is evicted or deleted while it is being written.
 
-## Layers
+If the data can't be found in any layer, a `Dis::Errors::NotFoundError`
+is raised.
+
+## Writing data
+
+When you assign `file` to an uploaded file, `content_type` and
+`filename` are extracted automatically. You can also assign
+`data` directly, but then you'll need to provide the metadata
+yourself:
+
+```ruby
+Document.create(data: File.open("document.pdf"),
+                content_type: "application/pdf",
+                filename: "document.pdf")
+
+Document.create(data: "foo", content_type: "text/plain", filename: "foo.txt")
+```
+
+Data is written to storage when the record is saved, and only if the
+record is valid.
+
+## Reading data
+
+`data` returns the content as a binary string.
+
+```ruby
+document.data? # => true
+document.data # => "foobar"
+```
+
+This loads the entire file into memory and keeps it there as long as
+the record stays in scope, so be careful with this, particularly
+when iterating over collections. The corresponding `data?` method is
+a bit smarter and doesn't share this gotcha.
+
+`open_data` returns an open file instead. It remains valid until you
+close it, even if the content is deleted or evicted from a cache
+layer. Use it when the reader outlives the current call stack, which
+is how `send_dis_data` hands data off to the web server.
+
+```ruby
+# Yields an open file, then closes it
+header = document.open_data { |file| file.read(1024) }
+
+# Returns an open file, close it when you're done
+file = document.open_data
+file.close
+```
+
+`with_data_file` yields a path, for tools that want a file name rather
+than the bytes. It is only valid for the duration of the block.
+
+```ruby
+document.with_data_file { |path| Vips::Image.new_from_file(path.to_s).avg }
+```
+
+## Storage layers
 
 The underlying storage consists of one or more layers. Each layer
 targets either a local path or a cloud provider like Amazon S3 or
@@ -168,8 +169,10 @@ There are three types of layers:
 - **Cache** layers are bounded, immediate layers with LRU eviction.
   They act as both a read cache and an upload buffer.
 
-Reads are performed from the first available layer. On a miss, the
-file is backfilled from the next layer.
+Reads are attempted in the order the layers were added, and served
+from the first one that has the file. If it had to be fetched from
+further down, it is backfilled to every writeable immediate layer on
+the way out.
 
 A typical multi-layer configuration has a local layer first and an
 Amazon S3 bucket second. This gives you an on-disk cache backed by
@@ -197,9 +200,12 @@ Dis::Storage.layers << Dis::Layer.new(
 )
 ```
 
-Layers can be configured as read-only — useful for reading from
-staging or production while developing locally, or when transitioning
-away from a provider.
+At least one writeable, immediate layer is required. Operations raise
+`Dis::Errors::NoLayersError` if none are configured.
+
+Layers can also be configured as read-only, which is useful for
+reading from staging or production while developing locally, or when
+transitioning away from a provider.
 
 ### Cache layers
 
@@ -220,7 +226,71 @@ Dis::Storage.layers << Dis::Layer.new(
 )
 ```
 
-Cache layers cannot be combined with `delayed` or `readonly`.
+## Configuration
+
+### Background jobs
+
+Delayed layers and cache eviction enqueue ActiveJob jobs. They run on
+the ActiveJob default queue unless you tell Dis otherwise:
+
+```ruby
+Dis.queue = :dis # or config.dis.queue = :dis
+```
+
+### Storage type
+
+Files are stored under a type, which defaults to the model's table
+name and maps to a directory within each layer. Deduplication happens
+within a type, so two different models storing the same file will each
+have their own blob.
+
+```ruby
+class Document < ActiveRecord::Base
+  include Dis::Model
+  self.dis_type = "files"
+end
+```
+
+Take care not to use the same `dis_type` for two models. They will share
+blobs, and destroying a record in one model will delete data still
+referenced by the other.
+
+### Attribute names
+
+If the default column names don't fit your schema, override them with
+`dis_attributes`. Valid keys are `content_hash`, `content_type`,
+`content_length` and `filename`.
+
+```ruby
+class Document < ActiveRecord::Base
+  include Dis::Model
+  self.dis_attributes = {
+    filename: :my_filename,
+    content_length: :filesize
+  }
+end
+```
+
+## Maintenance
+
+Two rake tasks exist to help you audit the store. Both take a
+comma-separated list of models.
+
+```sh
+bin/rails dis:missing MODELS=Document,Image    # records with no file
+bin/rails dis:orphaned MODELS=Document,Image   # files with no record
+```
+
+`dis:missing` lists content hashes referenced by records that exist in
+no non-cache layer. `dis:orphaned` lists the reverse, grouped by
+layer: files in storage that no record refers to.
+
+The same information is available programmatically:
+
+```ruby
+Dis::Storage.missing_keys(Document)  # => ["8843d7f9..."]
+Dis::Storage.orphaned_keys(Document) # => { #<Dis::Layer> => ["8843d7f9..."] }
+```
 
 ## Low-level API
 
@@ -234,11 +304,38 @@ Dis::Storage.get("documents", hash).body     # => "foobar"
 Dis::Storage.delete("documents", hash)       # => true
 ```
 
+`get` loads the entire body into memory. To stream instead, write into
+a file you own, or ask for a local path:
+
+```ruby
+File.open("out.txt", "w+b") do |file|
+  Dis::Storage.get_file("documents", hash, file)
+end
+
+Dis::Storage.file_path("documents", hash) # => "/path/to/db/dis/..." or nil
+```
+
+`file_path` returns a path only if some layer holds the file locally.
+
+To move content between types, use `change_type`:
+
+```ruby
+Dis::Storage.change_type("documents", "archived_documents", hash)
+```
+
 ## Documentation
 
-See the [generated documentation on RubyDoc.info](https://www.rubydoc.info/gems/dis)
+See the [generated documentation on RubyDoc.info](https://www.rubydoc.info/gems/dis),
+and the [changelog](CHANGELOG.md) for release notes.
+
+## Contributing
+
+Bug reports and pull requests are welcome on
+[GitHub](https://github.com/elektronaut/dis). See
+[CONTRIBUTING.md](CONTRIBUTING.md) for how to run the tests and how
+commits are formatted, and note that this project ships with a
+[code of conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
-Copyright 2014-2026 Inge Jørgensen. Released under the
-[MIT License](LICENSE).
+Released under the [MIT License](LICENSE).

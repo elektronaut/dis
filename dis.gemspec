@@ -30,6 +30,10 @@ Gem::Specification.new do |s|
   s.add_dependency "ruby-progressbar", "~> 1.11"
 
   s.metadata = {
-    "rubygems_mfa_required" => "true"
+    "bug_tracker_uri" => "https://github.com/elektronaut/dis/issues",
+    "changelog_uri" => "https://github.com/elektronaut/dis/blob/main/CHANGELOG.md",
+    "documentation_uri" => "https://www.rubydoc.info/gems/dis",
+    "rubygems_mfa_required" => "true",
+    "source_code_uri" => "https://github.com/elektronaut/dis"
   }
 end
