@@ -332,6 +332,49 @@ describe Dis::Storage do
       end
     end
 
+    context "when a cache layer has the file" do
+      before do
+        described_class.layers << cache_layer
+        described_class.layers << second_layer
+        cache_layer.store(type, hash, file)
+        described_class.get(type, hash)
+      end
+
+      it "does not enqueue an evict job" do
+        expect(Dis::Jobs::Evict).not_to have_received(:perform_later)
+      end
+    end
+
+    context "when the file is backfilled to a cache layer" do
+      before do
+        described_class.layers << cache_layer
+        described_class.layers << second_layer
+        second_layer.store(type, hash, file)
+        described_class.get(type, hash)
+      end
+
+      it "backfills the cache layer" do
+        expect(cache_layer.exists?(type, hash)).to be true
+      end
+
+      it "enqueues an evict job" do
+        expect(Dis::Jobs::Evict).to have_received(:perform_later)
+      end
+    end
+
+    context "when the file is backfilled without cache layers" do
+      before do
+        described_class.layers << layer
+        described_class.layers << second_layer
+        second_layer.store(type, hash, file)
+        described_class.get(type, hash)
+      end
+
+      it "does not enqueue an evict job" do
+        expect(Dis::Jobs::Evict).not_to have_received(:perform_later)
+      end
+    end
+
     context "when a layer raises an error" do
       before do
         described_class.layers << layer
@@ -503,6 +546,36 @@ describe Dis::Storage do
       it "backfills the earlier layer" do
         get_file
         expect(layer.exists?(type, hash)).to be true
+      end
+    end
+
+    context "when a cache layer is backfilled" do
+      before do
+        described_class.layers << cache_layer
+        described_class.layers << second_layer
+        second_layer.store(type, hash, file)
+        get_file
+      end
+
+      it "backfills the cache layer" do
+        expect(cache_layer.exists?(type, hash)).to be true
+      end
+
+      it "enqueues an evict job" do
+        expect(Dis::Jobs::Evict).to have_received(:perform_later)
+      end
+    end
+
+    context "when a cache layer has the file" do
+      before do
+        described_class.layers << cache_layer
+        described_class.layers << second_layer
+        cache_layer.store(type, hash, file)
+        get_file
+      end
+
+      it "does not enqueue an evict job" do
+        expect(Dis::Jobs::Evict).not_to have_received(:perform_later)
       end
     end
 

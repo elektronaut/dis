@@ -305,9 +305,9 @@ module Dis
       end
 
       def evict_cache(layer)
-        return if layer.size <= layer.max_size
-
         current_size = layer.size
+        return if current_size <= layer.max_size
+
         layer.cached_files.each do |entry|
           break if current_size <= layer.max_size
 
@@ -352,6 +352,7 @@ module Dis
 
       def backfill!(type, file)
         store_immediately!(type, file)
+        Dis::Jobs::Evict.perform_later if layers.cache?
       rescue StandardError => e
         report_layer_error(e, type:)
       end
