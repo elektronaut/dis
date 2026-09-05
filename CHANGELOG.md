@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/elektronaut/dis/compare/dis/v2.3.0...dis/v2.3.1) (2026-09-05)
+
+
+### Bug Fixes
+
+* Evict from cache layer on read backfill ([ff18e33](https://github.com/elektronaut/dis/commit/ff18e331cd6a4da9d4c02cffea04647aa5884653))
+
 ## [2.3.0](https://github.com/elektronaut/dis/compare/dis/v2.2.2...dis/v2.3.0) (2026-08-30)
 
 
