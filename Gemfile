@@ -7,6 +7,7 @@ gem "rails", "~> 8.1.3"
 gemspec
 
 group :development, :test do
+  gem "pg"
   gem "pry"
   gem "pry-stack_explorer"
 
