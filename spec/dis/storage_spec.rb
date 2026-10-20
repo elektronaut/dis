@@ -37,10 +37,7 @@ describe Dis::Storage do
 
   before do
     described_class.layers.clear!
-    allow(Dis::Jobs::ChangeType).to receive(:perform_later)
-    allow(Dis::Jobs::Delete).to receive(:perform_later)
-    allow(Dis::Jobs::Evict).to receive(:perform_later)
-    allow(Dis::Jobs::Store).to receive(:perform_later)
+    ActiveJob::Base.queue_adapter = :test
     allow(Rails.error).to receive(:report)
   end
 
@@ -112,7 +109,7 @@ describe Dis::Storage do
       it "enqueues a job" do
         described_class.store(type, file)
         expect(Dis::Jobs::Store).to(
-          have_received(:perform_later).with(type, hash)
+          have_been_enqueued.with(type, hash)
         )
       end
 
@@ -162,7 +159,7 @@ describe Dis::Storage do
       end
 
       it "enqueues an evict job" do
-        expect(Dis::Jobs::Evict).to have_received(:perform_later)
+        expect(Dis::Jobs::Evict).to have_been_enqueued
       end
     end
 
@@ -173,7 +170,7 @@ describe Dis::Storage do
       end
 
       it "does not enqueue an evict job" do
-        expect(Dis::Jobs::Evict).not_to have_received(:perform_later)
+        expect(Dis::Jobs::Evict).not_to have_been_enqueued
       end
     end
   end
@@ -341,7 +338,7 @@ describe Dis::Storage do
       end
 
       it "does not enqueue an evict job" do
-        expect(Dis::Jobs::Evict).not_to have_received(:perform_later)
+        expect(Dis::Jobs::Evict).not_to have_been_enqueued
       end
     end
 
@@ -358,7 +355,7 @@ describe Dis::Storage do
       end
 
       it "enqueues an evict job" do
-        expect(Dis::Jobs::Evict).to have_received(:perform_later)
+        expect(Dis::Jobs::Evict).to have_been_enqueued
       end
     end
 
@@ -371,7 +368,7 @@ describe Dis::Storage do
       end
 
       it "does not enqueue an evict job" do
-        expect(Dis::Jobs::Evict).not_to have_received(:perform_later)
+        expect(Dis::Jobs::Evict).not_to have_been_enqueued
       end
     end
 
@@ -562,7 +559,7 @@ describe Dis::Storage do
       end
 
       it "enqueues an evict job" do
-        expect(Dis::Jobs::Evict).to have_received(:perform_later)
+        expect(Dis::Jobs::Evict).to have_been_enqueued
       end
     end
 
@@ -575,7 +572,7 @@ describe Dis::Storage do
       end
 
       it "does not enqueue an evict job" do
-        expect(Dis::Jobs::Evict).not_to have_received(:perform_later)
+        expect(Dis::Jobs::Evict).not_to have_been_enqueued
       end
     end
 
@@ -661,7 +658,7 @@ describe Dis::Storage do
       it "enqueues a job" do
         described_class.delete(type, hash)
         expect(Dis::Jobs::Delete).to(
-          have_received(:perform_later).with(type, hash)
+          have_been_enqueued.with(type, hash)
         )
       end
 
@@ -724,7 +721,7 @@ describe Dis::Storage do
 
       it "enqueues a job" do
         expect(Dis::Jobs::ChangeType).to(
-          have_received(:perform_later).with(type, new_type, hash)
+          have_been_enqueued.with(type, new_type, hash)
         )
       end
 
@@ -779,7 +776,7 @@ describe Dis::Storage do
       end
 
       it "enqueues an evict job" do
-        expect(Dis::Jobs::Evict).to have_received(:perform_later)
+        expect(Dis::Jobs::Evict).to have_been_enqueued
       end
     end
   end
